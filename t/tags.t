@@ -22,12 +22,12 @@ use Test::More qw(no_plan);
 
   sub quux {
     use HTML::Tags;
-    <html>, <body id="spoon">, \"YAY", </body>, </html>;
+    <html>, <body id="spoon">, "YAY", </body>, </html>;
   }
 }
 
 is(
-  join(', ', map ${$_}, Foo::foo()),
+  join(', ', XML::Tags::sanitize Foo::foo()),
   '<one>, <two>, <three>',
   'open tags ok'
 );
@@ -35,13 +35,13 @@ is(
 ok(!eval { Foo::bar(); 1 }, 'Death on use of unimported tag');
 
 is(
-  join(', ', map ${$_}, Foo::baz()),
+  join(', ', XML::Tags::sanitize Foo::baz()),
   '</bar>',
   'close tag ok'
 );
 
 is(
-  join('', map ${$_}, Foo::quux),
+  join('', XML::Tags::sanitize Foo::quux),
   '<html><body id="spoon">YAY</body></html>',
   'HTML tags ok'
 );

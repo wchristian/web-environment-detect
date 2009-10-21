@@ -5,8 +5,6 @@ use warnings FATAL => 'all';
 
 use File::Glob ();
 
-
-
 my $IN_SCOPE = 0;
 
 sub import {
@@ -20,6 +18,16 @@ sub import {
   my $unex = $class->_export_tags_into($target => @tags);
   $class->_install_unexporter($unex);
   $IN_SCOPE = 1;
+}
+
+sub sanitize {
+  map { # string == text -> HTML, scalarref == raw HTML, other == passthrough
+    ref($_)
+      ? (ref $_ eq 'SCALAR' ? $$_ : $_)
+      : do { local $_ = $_; # copy
+          s/&/&amp;/g; s/"/&quot/g; s/</&lt;/g; s/>/&gt;/g; $_;
+        }
+  } @_
 }
 
 sub _find_tags { shift; @_ }
