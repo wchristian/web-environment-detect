@@ -43,7 +43,7 @@ sub _find_target {
         # unless it smells like </foo> or <foo bar="baz">
         return File::Glob::glob($_[0]) unless (/^\/\w+$/ || /^\w+\s+\w+="/);
       }
-      return '<'.$_[0].'>';
+      return \('<'.$_[0].'>');
     };
   }
 }
@@ -52,7 +52,7 @@ sub _export_tags_into {
   my ($class, $into, @tags) = @_;
   foreach my $tag (@tags) {
     no strict 'refs';
-    tie *{"${into}::${tag}"}, 'XML::Tags::TIEHANDLE', "<${tag}>";
+    tie *{"${into}::${tag}"}, 'XML::Tags::TIEHANDLE', \"<${tag}>";
   }
   return sub {
     foreach my $tag (@tags) {
