@@ -19,6 +19,11 @@ use Test::More qw(no_plan);
     use XML::Tags qw(bar);
     </bar>;
   }
+
+  sub quux {
+    use HTML::Tags;
+    <html>, <body id="spoon">, "YAY", </body>, </html>;
+  }
 }
 
 is(
@@ -33,4 +38,10 @@ is(
   join(', ', Foo::baz()),
   '</bar>',
   'close tag ok'
+);
+
+is(
+  join('', Foo::quux),
+  '<html><body id="spoon">YAY</body></html>',
+  'HTML tags ok'
 );
