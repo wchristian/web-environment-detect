@@ -68,7 +68,7 @@ is_deeply(
   '/post/one/ does not match'
 );
 
-my $combi = $dp->parse_dispatch_specification('GET /post/*');
+my $combi = $dp->parse_dispatch_specification('GET+/post/*');
 
 is_deeply(
   [ $combi->({ PATH_INFO => '/post/one', REQUEST_METHOD => 'GET' }) ],

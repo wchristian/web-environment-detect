@@ -23,7 +23,7 @@ sub parse_dispatch_specification {
       push @match, $self->_parse_spec_section($spec)
         or $self->_blam("Unable to work out what the next section is");
       last PARSE if (pos == length);
-      /\G\s+/gc or $self->_blam('Spec sections not space separated');
+      /\G\+/gc or $self->_blam('Spec sections must be separated by +');
     } until (pos == length) }; # accept trailing whitespace
     return $match[0] if (@match == 1);
     return sub {
