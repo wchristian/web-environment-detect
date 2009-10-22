@@ -27,4 +27,6 @@ sub import {
   XML::Tags->import($opts, @HTML_TAGS, @rest);
 }
 
+sub to_html_string { XML::Tags::to_xml_string(@_) }
+
 1;

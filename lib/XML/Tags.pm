@@ -19,7 +19,7 @@ sub import {
   $IN_SCOPE = 1;
 }
 
-sub sanitize {
+sub to_xml_string {
   map { # string == text -> HTML, scalarref == raw HTML, other == passthrough
     ref($_)
       ? (ref $_ eq 'SCALAR' ? $$_ : $_)
@@ -40,13 +40,14 @@ sub _find_target {
 
 sub _set_glob {
   # stupid insanity. delete anything already there so we disassociated
-  # the *CORE::GLOBAL::glob typeglob. Then the compilation of the eval
+  # the *CORE::GLOBAL::glob typeglob. Then the string reference call
   # revivifies it - i.e. creates us a new glob, which we get a reference
   # to, which we can then assign to.
-  # doing it without the eval doesn't - it binds to the version in scope
+  # doing it without the quotes doesn't - it binds to the version in scope
   # at compile time, which means after a delete you get a nice warm segv.
   delete ${CORE::GLOBAL::}{glob};
-  *{eval '\*CORE::GLOBAL::glob'} = $_[0];
+  no strict 'refs';
+  *{'CORE::GLOBAL::glob'} = $_[0];
 }
 
 sub _export_tags_into {

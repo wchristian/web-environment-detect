@@ -31,7 +31,7 @@ use Test::More qw(no_plan);
 }
 
 is(
-  join(', ', XML::Tags::sanitize Foo::foo()),
+  join(', ', XML::Tags::to_xml_string Foo::foo()),
   '<one>, <two>, <three>',
   'open tags ok'
 );
@@ -39,13 +39,13 @@ is(
 ok(!eval { Foo::bar(); 1 }, 'Death on use of unimported tag');
 
 is(
-  join(', ', XML::Tags::sanitize Foo::baz()),
+  join(', ', XML::Tags::to_xml_string Foo::baz()),
   '</bar>',
   'close tag ok'
 );
 
 is(
-  join('', XML::Tags::sanitize Foo::quux),
+  join('', HTML::Tags::to_html_string Foo::quux),
   '<html><body id="spoon">YAY</body></html>',
   'HTML tags ok'
 );
