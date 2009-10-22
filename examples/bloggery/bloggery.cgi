@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-
 use FindBin;
 use lib $FindBin::Bin.'/code';
 use Web::Simple 'Bloggery';
@@ -26,6 +24,11 @@ sub post {
   my $file = $self->{dir}."/${name}.html";
   return unless $file && -f $file;
   return Bloggery::Post->from_file($file);
+}
+
+sub map {
+  my ($self, $code) = @_;
+  map $code->($_), $self->all;
 }
 
 package Bloggery::Post;
@@ -140,13 +143,13 @@ sub main_html_for {
     $data->html
   } elsif ($data->isa('Bloggery::PostList')) {
     <ul>,
-      (map {
+      $data->map(sub {
         my $path = '/'.$_->name.'.html';
         <li>,
           <h4>, <a href="$path">, $_->title, </a>, </h4>,
           <span class="summary">, $_->summary_html, </span>,
         </li>;
-      } $data->all),
+      }),
     </ul>;
   } else {
     <h2>, "Don't know how to render $data", </h2>;
