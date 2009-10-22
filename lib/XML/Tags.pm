@@ -30,6 +30,8 @@ sub sanitize {
   } @_
 }
 
+sub _glob_glob { eval '\*CORE::GLOBAL::glob' }
+
 sub _find_tags { shift; @_ }
 
 sub _find_target {
@@ -39,21 +41,12 @@ sub _find_target {
   return (caller($level))[0];
 }
 
-{
-  my $setup;
-
-  sub _setup_glob_override {
-    return if $setup;
-    $setup = 1;
-    no warnings 'redefine';
-    *CORE::GLOBAL::glob = sub {
-      for ($_[0]) {
-        # unless it smells like </foo> or <foo bar="baz">
-        return File::Glob::glob($_[0]) unless (/^\/\w+$/ || /^\w+\s+\w+="/);
-      }
-      return \('<'.$_[0].'>');
-    };
-  }
+sub _setup_glob_override {
+  no warnings 'redefine';
+  delete ${CORE::GLOBAL::}{glob};
+  *{_glob_glob()} = sub {
+    return \('<'.$_[0].'>');
+  };
 }
 
 sub _export_tags_into {
@@ -67,6 +60,8 @@ sub _export_tags_into {
       no strict 'refs';
       delete ${"${into}::"}{$tag}
     }
+    delete ${CORE::GLOBAL::}{glob};
+    *{_glob_glob()} = \&File::Glob::glob;
     $IN_SCOPE = 0;
   };
 }

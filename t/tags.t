@@ -24,6 +24,10 @@ use Test::More qw(no_plan);
     use HTML::Tags;
     <html>, <body id="spoon">, "YAY", </body>, </html>;
   }
+
+  sub globbery {
+    <t/globbery/*>;
+  }
 }
 
 is(
@@ -44,4 +48,10 @@ is(
   join('', XML::Tags::sanitize Foo::quux),
   '<html><body id="spoon">YAY</body></html>',
   'HTML tags ok'
+);
+
+is(
+  join(', ', Foo::globbery),
+  't/globbery/one, t/globbery/two',
+  'real glob re-installed ok'
 );
