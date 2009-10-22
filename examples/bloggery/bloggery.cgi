@@ -87,7 +87,7 @@ dispatch [
     filter_response { $self->render_html($_[1]) },
   },
   sub (GET + /) {
-    $self->redispatch('index.html')
+    $self->redispatch('/index.html')
   },
   sub (GET + /index) {
     $self->post_list
