@@ -14,7 +14,6 @@ sub import {
   my $opts = shift(@args) if ref($args[0]) eq 'HASH';
   my $target = $class->_find_target(0, $opts);
   my @tags = $class->_find_tags(@args);
-  $class->_setup_glob_override;
   my $unex = $class->_export_tags_into($target => @tags);
   $class->_install_unexporter($unex);
   $IN_SCOPE = 1;
@@ -30,8 +29,6 @@ sub sanitize {
   } @_
 }
 
-sub _glob_glob { eval '\*CORE::GLOBAL::glob' }
-
 sub _find_tags { shift; @_ }
 
 sub _find_target {
@@ -41,12 +38,9 @@ sub _find_target {
   return (caller($level))[0];
 }
 
-sub _setup_glob_override {
-  no warnings 'redefine';
+sub _set_glob {
   delete ${CORE::GLOBAL::}{glob};
-  *{_glob_glob()} = sub {
-    return \('<'.$_[0].'>');
-  };
+  *{eval '\*CORE::GLOBAL::glob'} = $_[0];
 }
 
 sub _export_tags_into {
@@ -55,13 +49,13 @@ sub _export_tags_into {
     no strict 'refs';
     tie *{"${into}::${tag}"}, 'XML::Tags::TIEHANDLE', \"<${tag}>";
   }
+  _set_glob(sub { \('<'.$_[0].'>'); });
   return sub {
     foreach my $tag (@tags) {
       no strict 'refs';
       delete ${"${into}::"}{$tag}
     }
-    delete ${CORE::GLOBAL::}{glob};
-    *{_glob_glob()} = \&File::Glob::glob;
+    _set_glob(\&File::Glob::glob);
     $IN_SCOPE = 0;
   };
 }
