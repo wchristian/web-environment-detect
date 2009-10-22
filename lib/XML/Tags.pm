@@ -39,6 +39,12 @@ sub _find_target {
 }
 
 sub _set_glob {
+  # stupid insanity. delete anything already there so we disassociated
+  # the *CORE::GLOBAL::glob typeglob. Then the compilation of the eval
+  # revivifies it - i.e. creates us a new glob, which we get a reference
+  # to, which we can then assign to.
+  # doing it without the eval doesn't - it binds to the version in scope
+  # at compile time, which means after a delete you get a nice warm segv.
   delete ${CORE::GLOBAL::}{glob};
   *{eval '\*CORE::GLOBAL::glob'} = $_[0];
 }
