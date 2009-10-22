@@ -25,6 +25,9 @@ sub _export_into {
     *{"${app_package}::filter_response"} = sub (&) {
       $app_package->_construct_response_filter($_[0]);
     };
+    *{"${app_package}::redispatch_to"} = sub {
+      $app_package->_construct_redispatch($_[0]);
+    };
     *{"${app_package}::default_config"} = sub {
       my @defaults = @_;
       *{"${app_package}::_default_config"} = sub { @defaults };

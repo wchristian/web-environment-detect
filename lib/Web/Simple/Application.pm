@@ -23,6 +23,17 @@ sub _is_response_filter {
     and $_[1]->isa('Web::Simple::ResponseFilter');
 }
 
+sub _construct_redispatch {
+  bless(\$_[1], 'Web::Simple::Redispatch');
+}
+
+sub _is_redispatch {
+  return unless
+    "$_[1]" =~ /\w+=[A-Z]/
+      and $_[1]->isa('Web::Simple::Redispatch');
+  return ${$_[1]};
+}
+
 sub _dispatch_parser {
   require Web::Simple::DispatchParser;
   return Web::Simple::DispatchParser->new;
@@ -65,6 +76,9 @@ sub _run_dispatch_for {
             $result,
             $self->_run_dispatch_for($new_env, \@disp)
           );
+        } elsif (my $path = $self->_is_redispatch($result)) {
+          $new_env->{PATH_INFO} = $path;
+          return $self->_run_dispatch_for($new_env, $dispatchables);
         }
         return $result;
       }

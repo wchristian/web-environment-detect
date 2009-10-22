@@ -25,9 +25,9 @@ sub run_request {
 
 my $res;
 
-$res = run_request(GET 'http://localhost/index.html');
+warn run_request(GET 'http://localhost/index.html')->as_string;
 
-warn $res->as_string;
+warn run_request(GET 'http://localhost/')->as_string;
 
 warn run_request(GET 'http://localhost/One-Post.html')->as_string;
 
