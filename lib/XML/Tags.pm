@@ -5,6 +5,8 @@ use warnings FATAL => 'all';
 
 use File::Glob ();
 
+require overload;
+
 my $IN_SCOPE = 0;
 
 sub import {
@@ -56,13 +58,18 @@ sub _export_tags_into {
     no strict 'refs';
     tie *{"${into}::${tag}"}, 'XML::Tags::TIEHANDLE', \"<${tag}>";
   }
-  _set_glob(sub { \('<'.$_[0].'>'); });
+  _set_glob(sub {
+    local $XML::Tags::StringThing::IN_GLOBBERY = 1;
+    \('<'."$_[0]".'>');
+  });
+  overload::constant(q => sub { XML::Tags::StringThing->from_constant(@_) });
   return sub {
     foreach my $tag (@tags) {
       no strict 'refs';
       delete ${"${into}::"}{$tag}
     }
     _set_glob(\&File::Glob::glob);
+    overload::remove_constant('q');
     $IN_SCOPE = 0;
   };
 }
@@ -81,5 +88,48 @@ sub READLINE { ${$_[0]} }
 package XML::Tags::Unex;
 
 sub DESTROY { local $@; eval { $_[0]->(); 1 } || warn "ARGH: $@" }
+
+package XML::Tags::StringThing;
+
+use overload (
+  '.' => 'concat',
+  '""' => 'stringify',
+  fallback => 1
+);
+
+sub stringify {
+  join(
+    '',
+    ((our $IN_GLOBBERY)
+      ? XML::Tags::to_xml_string(@{$_[0]})
+      : (map +(ref $_ ? $$_ : $_), @{$_[0]})
+    )
+  );
+}
+
+sub from_constant {
+  my ($class, $initial, $parsed, $type) = @_;
+  return $parsed unless $type eq 'qq';
+  return $class->new($parsed);
+}
+
+sub new {
+  my ($class, $string) = @_;
+  bless([ \$string ], $class);
+}
+
+sub concat {
+  my ($self, $other, $rev) = @_;
+  my @extra = do {
+    if (ref($other) && ($other =~ /[a-z]=[A-Z]/) && $other->isa(__PACKAGE__)) {
+      @{$other}
+    } else {
+      $other;
+    }
+  };
+  my @new = @{$self};
+  $rev ? unshift(@new, @extra) : push(@new, @extra);
+  bless(\@new, ref($self));
+}
 
 1;

@@ -25,6 +25,12 @@ use Test::More qw(no_plan);
     <html>, <body id="spoon">, "YAY", </body>, </html>;
   }
 
+  sub fleem {
+    use XML::Tags qw(woo);
+    my $ent = "one&two";
+    <woo ent="$ent">;
+  }
+
   sub globbery {
     <t/globbery/*>;
   }
@@ -48,6 +54,12 @@ is(
   join('', HTML::Tags::to_html_string Foo::quux),
   '<html><body id="spoon">YAY</body></html>',
   'HTML tags ok'
+);
+
+is(
+  join('', XML::Tags::to_xml_string Foo::fleem),
+  '<woo ent="one&amp;two">',
+  'Escaping ok'
 );
 
 is(
