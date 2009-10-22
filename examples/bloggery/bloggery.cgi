@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 use FindBin;
 use lib $FindBin::Bin.'/code';
 use Web::Simple 'Bloggery';
@@ -144,7 +146,7 @@ sub main_html_for {
   } elsif ($data->isa('Bloggery::PostList')) {
     <ul>,
       $data->map(sub {
-        my $path = '/'.$_->name.'.html';
+        my $path = $_->name.'.html';
         <li>,
           <h4>, <a href="$path">, $_->title, </a>, </h4>,
           <span class="summary">, $_->summary_html, </span>,
