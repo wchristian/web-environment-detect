@@ -86,7 +86,7 @@ sub _run_dispatch_for {
   }
   return [
     500, [ 'Content-type', 'text/plain' ],
-    'The management apologises but we have no idea how to handle that'
+    [ 'The management apologises but we have no idea how to handle that' ]
   ];
 }
 
