@@ -105,13 +105,28 @@ sub run_if_script {
   $self->run(@_);
 }
 
-sub run {
+sub _run_cgi {
   my $self = shift;
-  unless ($ENV{GATEWAY_INTERFACE}) {
-    die "mst is an idiot and didn't fix non-CGI yet";
-  }
   require Web::Simple::HackedPlack;
   Plack::Server::CGI->run(sub { $self->handle_request(@_) });
+}
+
+sub run {
+  my $self = shift;
+  if ($ENV{GATEWAY_INTERFACE}) {
+    $self->_run_cgi;
+  }
+  my $path = shift(@ARGV);
+
+  require HTTP::Request::AsCGI;
+  require HTTP::Request::Common;
+  local *GET = \&HTTP::Request::Common::GET;
+
+  my $request = GET($path);
+  my $c = HTTP::Request::AsCGI->new($request)->setup;
+  $self->_run_cgi;
+  $c->restore;
+  print $c->response->as_string;
 }
 
 1;
