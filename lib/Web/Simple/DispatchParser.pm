@@ -107,6 +107,9 @@ sub _url_path_segment_match {
     # word chars only -> exact path part match
     /\G(\w+)/gc and
       return "\Q$1";
+    # ** -> capture unlimited path parts
+    /\G\*\*/gc and
+      return '(.*?[^/])';
     # * -> capture path part
     /\G\*/gc and
       return '([^/]+)';
