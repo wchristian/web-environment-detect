@@ -9,6 +9,8 @@ sub new {
   bless({ config => $config }, $class);
 }
 
+sub _default_config { () }
+
 sub config {
   shift->{config};
 }
