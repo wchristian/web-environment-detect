@@ -213,6 +213,8 @@ It creates and returns a response filter object to the dispatcher,
 encapsulating the block passed to it as the filter routine to call. See
 L</DISPATCH STRATEGY> below for how a response filter affects dispatch.
 
-1;
+=head1 DISPATCH STRATEGY
+
+=cut
 
 1;

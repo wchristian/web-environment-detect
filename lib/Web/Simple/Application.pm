@@ -3,6 +3,52 @@ package Web::Simple::Application;
 use strict;
 use warnings FATAL => 'all';
 
+{
+  package Web::Simple::Dispatcher;
+
+  sub _is_dispatcher {
+    ref($_[1])
+      and "$_[1]" =~ /\w+=[A-Z]/
+      and $_[1]->isa(__PACKAGE__);
+  }
+
+  sub next {
+    @_ > 1
+      ? $_[0]->{next} = $_[1]
+      : shift->{next}
+  }
+
+  sub set_next {
+    $_[0]->{next} = $_[1];
+    $_[0]
+  }
+
+  sub dispatch {
+    my ($self, $env, @args) = @_;
+    my $next = $self->next;
+    if (my ($env_delta, @match) = $self->_match_against($env)) {
+      if (my ($result) = $self->_execute_with(@args, @match)) {
+        if ($self->_is_dispatcher($result)) {
+          $next = $result->set_next($next);
+          $env = { %$env, %$env_delta };
+        } else {
+          return $result;
+        }
+      }
+    }
+    return $next->dispatch($env, @args);
+  }
+
+  sub _match_against {
+     return ({}, $_[1]) unless $_[0]->{matches};
+     $_[0]->{matches}->($_[1]);
+  }
+
+  sub _execute_with {
+    $_[0]->{call}->(@_);
+  }
+}
+
 sub new {
   my ($class, $data) = @_;
   my $config = { $class->_default_config, %{($data||{})->{config}||{}} };
@@ -16,24 +62,24 @@ sub config {
 }
 
 sub _construct_response_filter {
-  bless($_[1], 'Web::Simple::ResponseFilter');
-}
-
-sub _is_response_filter {
-  # simple blessed() hack
-  "$_[1]" =~ /\w+=[A-Z]/
-    and $_[1]->isa('Web::Simple::ResponseFilter');
+  my $code = $_[1];
+  $_[0]->_build_dispatcher({
+    call => sub {
+      my ($d, $self, $env) = (shift, shift, shift);
+      $self->_run_with_self($code, $d->next->dispatch($env, $self, @_));
+    },
+  });
 }
 
 sub _construct_redispatch {
-  bless(\$_[1], 'Web::Simple::Redispatch');
-}
-
-sub _is_redispatch {
-  return unless
-    "$_[1]" =~ /\w+=[A-Z]/
-      and $_[1]->isa('Web::Simple::Redispatch');
-  return ${$_[1]};
+  my ($self, $new_path) = @_;
+  $self->_build_dispatcher({
+    call => sub {
+      shift;
+      my ($self, $env) = @_;
+      $self->handle_request({ %{$env}, PATH_INFO => $new_path })
+    }
+  })
 }
 
 sub _dispatch_parser {
@@ -45,51 +91,49 @@ sub _setup_dispatchables {
   my ($class, $dispatch_subs) = @_;
   my $parser = $class->_dispatch_parser;
   my @dispatchables;
+  my ($root, $last);
   foreach my $dispatch_sub (@$dispatch_subs) {
     my $proto = prototype $dispatch_sub;
     my $matcher = (
       defined($proto)
         ? $parser->parse_dispatch_specification($proto)
-        : sub { ({}) }
+        : undef
     );
+    my $new = $class->_build_dispatcher({
+      matches => $matcher,
+      call => sub { shift;
+        shift->_run_with_self($dispatch_sub, @_)
+      },
+    });
+    $root ||= $new;
+    $last = $last ? $last->next($new) : $new;
     push @dispatchables, [ $matcher, $dispatch_sub ];
   }
+  $last->next($class->_build_final_dispatcher);
   {
     no strict 'refs';
-    *{"${class}::_dispatchables"} = sub { @dispatchables };
+    *{"${class}::_dispatch_root"} = sub { $root };
   }
+}
+
+sub _build_dispatcher {
+  bless($_[1], 'Web::Simple::Dispatcher');
+}
+
+sub _build_final_dispatcher {
+  shift->_build_dispatcher({
+    call => sub {
+      [
+        500, [ 'Content-type', 'text/plain' ],
+        [ 'The management apologises but we have no idea how to handle that' ]
+      ]
+    }
+  })
 }
 
 sub handle_request {
   my ($self, $env) = @_;
-  $self->_run_dispatch_for($env, [ $self->_dispatchables ]);
-}
-
-sub _run_dispatch_for {
-  my ($self, $env, $dispatchables) = @_;
-  my @disp = @$dispatchables;
-  while (my $disp = shift @disp) {
-    my ($match, $run) = @{$disp};
-    if (my ($env_delta, @args) = $match->($env)) {
-      my $new_env = { %$env, %$env_delta };
-      if (my ($result) = $self->_run_with_self($run, @args)) {
-        if ($self->_is_response_filter($result)) {
-          return $self->_run_with_self(
-            $result,
-            $self->_run_dispatch_for($new_env, \@disp)
-          );
-        } elsif (my $path = $self->_is_redispatch($result)) {
-          $new_env->{PATH_INFO} = $path;
-          return $self->_run_dispatch_for($new_env, $dispatchables);
-        }
-        return $result;
-      }
-    }
-  }
-  return [
-    500, [ 'Content-type', 'text/plain' ],
-    [ 'The management apologises but we have no idea how to handle that' ]
-  ];
+  $self->_dispatch_root->dispatch($env, $self);
 }
 
 sub _run_with_self {
@@ -118,7 +162,7 @@ sub run {
   if ($ENV{GATEWAY_INTERFACE}) {
     $self->_run_cgi;
   }
-  my $path = shift(@ARGV);
+  my $path = shift(@ARGV) or die "No path passed - use $0 / for root";
 
   require HTTP::Request::AsCGI;
   require HTTP::Request::Common;
