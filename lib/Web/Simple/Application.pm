@@ -40,8 +40,8 @@ use warnings FATAL => 'all';
   }
 
   sub _match_against {
-     return ({}, $_[1]) unless $_[0]->{matches};
-     $_[0]->{matches}->($_[1]);
+     return ({}, $_[1]) unless $_[0]->{match};
+     $_[0]->{match}->($_[1]);
   }
 
   sub _execute_with {
@@ -100,7 +100,7 @@ sub _setup_dispatchables {
         : undef
     );
     my $new = $class->_build_dispatcher({
-      matches => $matcher,
+      match => $matcher,
       call => sub { shift;
         shift->_run_with_self($dispatch_sub, @_)
       },

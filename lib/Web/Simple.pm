@@ -215,6 +215,87 @@ L</DISPATCH STRATEGY> below for how a response filter affects dispatch.
 
 =head1 DISPATCH STRATEGY
 
+=head2 Description of the dispatcher object
+
+Web::Simple::Dispatcher objects have three components:
+
+=over 4
+
+=item * match - an optional test if this dispatcher matches the request
+
+=item * call - a routine to call if this dispatcher matches (or has no match)
+
+=item * next - the next dispatcher to call
+
+=back
+
+When a dispatcher is invoked, it checks its match routine against the
+request environment. The match routine may provide alterations to the
+request as a result of matching, and/or arguments for the call routine.
+
+If no match routine has been provided then Web::Simple treats this as
+a success, and supplies the request environment to the call routine as
+an argument.
+
+Given a successful match, the call routine is now invoked in list context
+with any arguments given to the original dispatch, plus any arguments
+provided by the match result.
+
+If this routine returns (), Web::Simple treats this identically to a failure
+to match.
+
+If this routine returns a Web::Simple::Dispatcher, the environment changes
+are merged into the environment and the new dispatcher's next pointer is
+set to our next pointer.
+
+If this routine returns anything else, that is treated as the end of dispatch
+and the value is returned.
+
+On a failed match, Web::Simple invokes the next dispatcher with the same
+arguments and request environment passed to the current one. On a successful
+match that returned a new dispatcher, Web::Simple invokes the new dispatcher
+with the same arguments but the modified request environment.
+
+=head2 How Web::Simple builds dispatcher objects for you
+
+In the case of the Web::Simple L</dispatch> export the match is constructed
+from the subroutine prototype - i.e.
+
+  sub (<match specification>) {
+    <call code>
+  }
+
+and the 'next' pointer is populated with the next element of the array,
+expect for the last element, which is given a next that will throw a 500
+error if none of your dispatchers match. If you want to provide something
+else as a default, a routine with no match specification always matches, so -
+
+  sub () {
+    [ 404, [ 'Content-type', 'text/plain' ], [ 'Error: Not Found' ] ]
+  }
+
+will produce a 404 result instead of a 500 by default. You can also override
+the L<Web::Simple::Application/_build_final_dispatcher> method in your app.
+
+Note that the code in the subroutine is executed as a -method- on your
+application object, so if your match specification provides arguments you
+should unpack them like so:
+
+  sub (<match specification>) {
+    my ($self, @args) = @_;
+    ...
+  }
+
+=head2 Web::Simple match specifications
+
+=head3 Method matches
+
+=head3 Path matches
+
+=head3 Extension matches
+
+=head3 Combining matches
+
 =cut
 
 1;
