@@ -290,11 +290,66 @@ should unpack them like so:
 
 =head3 Method matches
 
+  sub (GET ...) {
+
+A match specification beginning with a capital letter matches HTTP requests
+with that request method.
+
 =head3 Path matches
+
+  sub (/login) {
+
+A match specification beginning with a / is a path match. In the simplest
+case it matches a specific path. To match a path with a wildcard part, you
+can do:
+
+  sub (/user/*) {
+    $self->handle_user($_[1])
+
+This will match /user/<anything> where <anything> does not include a literal
+/ character. The matched part becomes part of the match arguments. You can
+also match more than one part:
+
+  sub (/user/*/*) {
+    my ($self, $user_1, $user_2) = @_;
+
+  sub (/domain/*/user/*) {
+    my ($self, $domain, $user) = @_;
+
+and so on. To match an arbitrary number of parts, use -
+
+  sub (/page/**) {
+
+This will result in an element per /-separated part so matched. Note that
+you can do
+
+  sub (/page/**/edit) {
+
+to match an arbitrary number of parts up to but not including some final
+part.
 
 =head3 Extension matches
 
+  sub (.html) {
+
+will match and strip .html from the path (assuming the subroutine itself
+returns something, of course). This is normally used for rendering - e.g.
+
+  sub (.html) {
+    filter_response { $self->render_html($_[1]) }
+  }
+
 =head3 Combining matches
+
+Matches may be combined with the + character - e.g.
+
+  sub (GET+/user/*) {
+
+Note that for legibility you are permitted to use whitespace -
+
+  sub(GET + /user/*) {
+
+but it will be ignored.
 
 =cut
 
