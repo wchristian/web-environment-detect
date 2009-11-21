@@ -36,6 +36,8 @@ sub _export_into {
     require Web::Simple::Application;
     unshift(@{"${app_package}::ISA"}, 'Web::Simple::Application');
   }
+  (my $name = $app_package) =~ s/::/\//g;
+  $INC{"${name}.pm"} = 'Set by "use Web::Simple;" invocation';
 }
 
 =head1 NAME
@@ -142,6 +144,16 @@ and creates the $self global variable in your application package, so you can
 use $self in dispatch subs without violating strict (Web::Simple::Application
 arranges for dispatch subroutines to have the correct $self in scope when
 this happens).
+
+Finally, import sets
+
+  $INC{"NameOfApplication.pm"} = 'Set by "use Web::Simple;" invocation';
+
+so that perl will not attempt to load the application again even if
+
+  require NameOfApplication;
+
+is encountered in other code.
 
 =head1 EXPORTED SUBROUTINES
 
