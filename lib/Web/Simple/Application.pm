@@ -160,7 +160,7 @@ sub _run_cgi {
 sub run {
   my $self = shift;
   if ($ENV{GATEWAY_INTERFACE}) {
-    $self->_run_cgi;
+    return $self->_run_cgi;
   }
   my $path = shift(@ARGV) or die "No path passed - use $0 / for root";
 
