@@ -55,6 +55,21 @@ sub new {
   bless({ config => $config }, $class);
 }
 
+sub _setup_default_config {
+  my $class = shift;
+  {
+    no strict 'refs';
+    if (${"${class}::_default_config"}{CODE}) {
+      $class->_cannot_call_twice('_setup_default_config', 'default_config');
+    }
+  }
+  my @defaults = (@_, $class->_default_config);
+  {
+    no strict 'refs';
+    *{"${class}::_default_config"} = sub { @defaults };
+  }
+}
+
 sub _default_config { () }
 
 sub config {
@@ -77,20 +92,34 @@ sub _construct_redispatch {
     call => sub {
       shift;
       my ($self, $env) = @_;
-      $self->handle_request({ %{$env}, PATH_INFO => $new_path })
+      $self->_dispatch({ %{$env}, PATH_INFO => $new_path })
     }
   })
 }
 
-sub _dispatch_parser {
+sub _build_dispatch_parser {
   require Web::Simple::DispatchParser;
   return Web::Simple::DispatchParser->new;
 }
 
-sub _setup_dispatchables {
+sub _cannot_call_twice {
+  my ($class, $method, $sub) = @_;
+  my $error = "Cannot call ${method} twice for ${class}";
+  if ($sub) {
+    $error .= " - did you call Web::Simple's ${sub} export twice?";
+  }
+  die $error;
+}
+
+sub _setup_dispatcher {
   my ($class, $dispatch_subs) = @_;
-  my $parser = $class->_dispatch_parser;
-  my @dispatchables;
+  {
+    no strict 'refs';
+    if (${"${class}::_dispatcher"}{CODE}) {
+      $class->_cannot_call_twice('_setup_dispatcher', 'dispatch');
+    }
+  }
+  my $parser = $class->_build_dispatch_parser;
   my ($root, $last);
   foreach my $dispatch_sub (@$dispatch_subs) {
     my $proto = prototype $dispatch_sub;
@@ -107,12 +136,11 @@ sub _setup_dispatchables {
     });
     $root ||= $new;
     $last = $last ? $last->next($new) : $new;
-    push @dispatchables, [ $matcher, $dispatch_sub ];
   }
   $last->next($class->_build_final_dispatcher);
   {
     no strict 'refs';
-    *{"${class}::_dispatch_root"} = sub { $root };
+    *{"${class}::_dispatcher"} = sub { $root };
   }
 }
 
@@ -131,9 +159,9 @@ sub _build_final_dispatcher {
   })
 }
 
-sub handle_request {
+sub _dispatch {
   my ($self, $env) = @_;
-  $self->_dispatch_root->dispatch($env, $self);
+  $self->_dispatcher->dispatch($env, $self);
 }
 
 sub _run_with_self {
@@ -154,7 +182,7 @@ sub run_if_script {
 sub _run_cgi {
   my $self = shift;
   require Web::Simple::HackedPlack;
-  Plack::Server::CGI->run(sub { $self->handle_request(@_) });
+  Plack::Server::CGI->run(sub { $self->_dispatch(@_) });
 }
 
 sub run {

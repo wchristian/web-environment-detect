@@ -3,14 +3,22 @@ package Web::Simple;
 use strict;
 use warnings FATAL => 'all';
 
-sub import {
+sub setup_all_strictures {
   strict->import;
   warnings->import(FATAL => 'all');
+}
+
+sub setup_dispatch_strictures {
+  setup_all_strictures();
   warnings->unimport('syntax');
   warnings->import(FATAL => qw(
     ambiguous bareword digit parenthesis precedence printf
     prototype qw reserved semicolon
   ));
+}
+
+sub import {
+  setup_dispatch_strictures();
   my ($class, $app_package) = @_;
   $class->_export_into($app_package);
 }
@@ -20,7 +28,7 @@ sub _export_into {
   {
     no strict 'refs';
     *{"${app_package}::dispatch"} = sub {
-      $app_package->_setup_dispatchables(@_);
+      $app_package->_setup_dispatcher(@_);
     };
     *{"${app_package}::filter_response"} = sub (&) {
       $app_package->_construct_response_filter($_[0]);
@@ -29,8 +37,7 @@ sub _export_into {
       $app_package->_construct_redispatch($_[0]);
     };
     *{"${app_package}::default_config"} = sub {
-      my @defaults = @_;
-      *{"${app_package}::_default_config"} = sub { @defaults };
+      $app_package->_setup_default_config(@_);
     };
     *{"${app_package}::self"} = \${"${app_package}::self"};
     require Web::Simple::Application;
@@ -140,7 +147,7 @@ It also exports the following subroutines:
 
   redispatch_to '/somewhere';
 
-and creates the $self global variable in your application package, so you can
+and creates a $self global variable in your application package, so you can
 use $self in dispatch subs without violating strict (Web::Simple::Application
 arranges for dispatch subroutines to have the correct $self in scope when
 this happens).
@@ -175,9 +182,8 @@ This creates the default configuration for the application, by creating a
   }
 
 in the application namespace when executed. Note that this means that
-you should only run default_config once - a second run will cause a warning
-that you are override the _default_config method in your application, which
-under Web::Simple will of course be fatal.
+you should only run default_config once - calling it a second time will
+cause an exception to be thrown.
 
 =head2 dispatch
 
@@ -190,8 +196,8 @@ under Web::Simple will of course be fatal.
     }
   ];
 
-The dispatch subroutine calls NameOfApplication->_setup_dispatchables with
-the subroutines passed to it, which then create's your Web::Simple
+The dispatch subroutine calls NameOfApplication->_setup_dispatcher with
+the subroutines passed to it, which then creates your Web::Simple
 application's dispatcher from these subs. The prototype of the subroutine
 is expected to be a Web::Simple dispatch specification (see
 L</DISPATCH SPECIFICATIONS> below for more details), and the body of the
@@ -200,14 +206,14 @@ L</DISPATCH STRATEGY> below for details on how the Web::Simple dispatch
 system uses the return values of these subroutines to determine how to
 continue, alter or abort dispatch.
 
-Note that _setup_dispatchables creates a
+Note that _setup_dispatcher creates a
 
-  sub _dispatchables {
-    return (<dispatchable objects here>);
+  sub _dispatcher {
+    return <root dispatcher object here>;
   }
 
 method in your class so as with default_config, calling dispatch a second time
-will result in a fatal warning from your application.
+will result in an exception.
 
 =head2 response_filter
 
@@ -221,9 +227,27 @@ will result in a fatal warning from your application.
 
 The response_filter subroutine is designed for use inside dispatch subroutines.
 
-It creates and returns a response filter object to the dispatcher,
-encapsulating the block passed to it as the filter routine to call. See
-L</DISPATCH STRATEGY> below for how a response filter affects dispatch.
+It creates and returns a special dispatcher that always matches, and calls
+the block passed to it as a filter on the result of running the rest of the
+current dispatch chain.
+
+Thus the filter above runs further dispatch as normal, but if the result of
+dispatch is a 500 (Internal Server Error) response, changes this to a 200 (OK)
+response without altering the headers or body.
+
+=head2 redispatch_to
+
+  redispatch_to '/other/url';
+
+The redispatch_to subroutine is designed for use inside dispatch subroutines.
+
+It creates and returns a special dispatcher that always matches, and instead
+of continuing dispatch re-delegates it to the start of the dispatch process,
+but with the path of the request altered to the supplied URL.
+
+Thus if you receive a POST to '/some/url' and return a redipstch to
+'/other/url', the dispatch behaviour will be exactly as if the same POST
+request had been made to '/other/url' instead.
 
 =head1 DISPATCH STRATEGY
 
@@ -359,7 +383,7 @@ Matches may be combined with the + character - e.g.
 
 Note that for legibility you are permitted to use whitespace -
 
-  sub(GET + /user/*) {
+  sub (GET + /user/*) {
 
 but it will be ignored.
 
