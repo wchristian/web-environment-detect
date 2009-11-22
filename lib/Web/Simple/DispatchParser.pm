@@ -7,7 +7,7 @@ sub new { bless({}, ref($_[0])||$_[0]) }
 
 sub _blam {
   my ($self, $error) = @_;
-  my $hat = (' ' x pos).'^';
+  my $hat = (' ' x (pos||0)).'^';
   die "Error parsing dispatch specification: ${error}\n
 ${_}
 ${hat} here\n";
@@ -36,7 +36,7 @@ sub _parse_spec {
         or $self->_blam('No valid combinator - expected + or |');
     } until (pos == length) }; # accept trailing whitespace
     if ($nested and pos == length) {
-      pos = $nested;
+      pos = $nested - 1;
       $self->_blam("No closing ) found for opening (");
     }
     return $match[0] if (@match == 1);

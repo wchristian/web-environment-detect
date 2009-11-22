@@ -162,3 +162,21 @@ is_deeply(
   [],
   '(GET+/foo)|POST does not match PUT /foo'
 );
+
+{
+  local $@;
+  ok(
+    !eval { $dp->parse_dispatch_specification('/foo+(GET'); 1 },
+    'Death with missing closing )'
+  );
+  my $err = q{
+    /foo+(GET
+         ^
+  };
+  (s/^\n//s,s/\n  $//s,s/^    //mg) for $err;
+  like(
+    $@,
+    qr{\Q$err\E},
+    "Error $@ matches\n${err}\n"
+  );
+}
