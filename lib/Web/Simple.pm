@@ -93,9 +93,11 @@ examples and non-CGI deployment, see below.
 
 =head1 WHY?
 
-While I originally wrote Web::Simple as part of my Antiquated Perl talk for
-Italian Perl Workshop 2009, I've found that having a bare minimum system for
-writing web applications that doesn't drive me insane is rather nice.
+Web::Simple was originally written to form part of my Antiquated Perl talk for
+Italian Perl Workshop 2009, but in writing the bloggery example I realised
+that having a bare minimum system for writing web applications that doesn't
+drive me insane was rather nice and decided to spend my attempt at nanowrimo
+for 2009 improving and documenting it to the point where others could use it.
 
 The philosophy of Web::Simple is to keep to an absolute bare minimum, for
 everything. It is not designed to be used for large scale applications;
@@ -363,6 +365,22 @@ you can do
 
 to match an arbitrary number of parts up to but not including some final
 part.
+
+Finally,
+
+  sub (/foo/...) {
+
+will match /foo/ on the beginning of the path -and- strip it, much like
+.html strips the extension. This is designed to be used to construct
+nested dispatch structures, but can also prove useful for having e.g. an
+optional language specification at the start of a path.
+
+Note that the '...' is a "maybe something here, maybe not" so the above
+specification will match like this:
+
+  /foo         # no match
+  /foo/        # match and strip path to '/'
+  /foo/bar/baz # match and strip path to '/bar/baz'
 
 =head3 Extension matches
 

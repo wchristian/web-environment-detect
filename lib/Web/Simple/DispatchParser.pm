@@ -134,14 +134,29 @@ sub _url_path_match {
   my ($self) = @_;
   for ($_[1]) {
     my @path;
-    while (/\G\//gc) {
+    my $full_path = '$';
+    PATH: while (/\G\//gc) {
+      /\G\.\.\./gc
+        and do {
+          $full_path = '';
+          last PATH;
+        };
       push @path, $self->_url_path_segment_match($_)
         or $self->_blam("Couldn't parse path match segment");
     }
-    my $re = '^()'.join('/','',@path).'$';
+    my $re = '^()'.join('/','',@path).($full_path ? '$' : '(/.*)$');
+    $re = qr/$re/;
+    if ($full_path) {
+      return sub {
+        if (my @cap = (shift->{PATH_INFO} =~ /$re/)) {
+          $cap[0] = {}; return @cap;
+        }
+        return ();
+      };
+    }
     return sub {
       if (my @cap = (shift->{PATH_INFO} =~ /$re/)) {
-        $cap[0] = {}; return @cap;
+        $cap[0] = { PATH_INFO => pop(@cap) }; return @cap;
       }
       return ();
     };

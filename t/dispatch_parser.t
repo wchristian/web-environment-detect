@@ -200,3 +200,23 @@ is_deeply(
   [],
   '!.html+.* does not match /foo'
 );
+
+my $sub = $dp->parse_dispatch_specification('/foo/*/...');
+
+is_deeply(
+  [ $sub->({ PATH_INFO => '/foo/1/bar' }) ],
+  [ { PATH_INFO => '/bar' }, 1 ],
+  '/foo/*/... matches /foo/1/bar and strips to /bar'
+);
+
+is_deeply(
+  [ $sub->({ PATH_INFO => '/foo/1/' }) ],
+  [ { PATH_INFO => '/' }, 1 ],
+  '/foo/*/... matches /foo/1/bar and strips to /'
+);
+
+is_deeply(
+  [ $sub->({ PATH_INFO => '/foo/1' }) ],
+  [],
+  '/foo/*/... does not match /foo/1 (no trailing /)'
+);
