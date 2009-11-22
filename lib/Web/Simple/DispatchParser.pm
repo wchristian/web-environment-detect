@@ -58,6 +58,35 @@ sub _parse_spec {
   }
 }
 
+sub _parse_spec_combinator {
+  my ($self, $spec, $match) = @_;
+  for ($_[1]) {
+
+    /\G\+/gc and
+      return $match;
+
+    /\G\|/gc and
+      return do {
+        my @match = $match;
+        PARSE: { do {
+          push @match, $self->_parse_spec_section($_)
+            or $self->_blam("Unable to work out what the next section is");
+          last PARSE if (pos == length);
+          last PARSE unless /\G\|/gc; # give up when next thing isn't |
+        } until (pos == length) }; # accept trailing whitespace
+        return sub {
+          foreach my $try (@match) {
+            if (my @ret = $try->(@_)) {
+              return @ret;
+            }
+          }
+          return;
+        };
+      };
+  }
+  return;
+}
+
 sub _parse_spec_section {
   my ($self) = @_;
   for ($_[1]) {
@@ -92,37 +121,12 @@ sub _parse_spec_section {
           return;
         };
       };
+
+    # ?<param spec>
+    /\G\?/gc and
+      return $self->_parse_param_handler($_, 'query');
   }
   return; # () will trigger the blam in our caller
-}
-
-sub _parse_spec_combinator {
-  my ($self, $spec, $match) = @_;
-  for ($_[1]) {
-
-    /\G\+/gc and
-      return $match;
-
-    /\G\|/gc and
-      return do {
-        my @match = $match;
-        PARSE: { do {
-          push @match, $self->_parse_spec_section($_)
-            or $self->_blam("Unable to work out what the next section is");
-          last PARSE if (pos == length);
-          last PARSE unless /\G\|/gc; # give up when next thing isn't |
-        } until (pos == length) }; # accept trailing whitespace
-        return sub {
-          foreach my $try (@match) {
-            if (my @ret = $try->(@_)) {
-              return @ret;
-            }
-          }
-          return;
-        };
-      };
-  }
-  return;
 }
 
 sub _http_method_match {
@@ -200,6 +204,78 @@ sub _url_extension_match {
       } else {
         ();
       }
+    };
+  }
+}
+
+sub _parse_param_handler {
+  my ($self, $spec, $type) = @_;
+
+  require Web::Simple::ParamParser;
+  my $unpacker = Web::Simple::ParamParser->can("get_unpacked_${type}_from");
+
+  for ($_[1]) {
+    my (@required, @single, %multi, $star, $multistar) = @_;
+    PARAM: { do {
+
+      # per param flag
+
+      my $multi = 0;
+
+      # ?@foo or ?@*
+
+      /\G\@/gc and $multi = 1;
+
+      # @* or *
+
+      if (/\G\*/) {
+
+        $multi ? ($multistar = 1) : ($star = 1);
+      } else {
+
+        # @foo= or foo= or @foo~ or foo~
+        
+        /\G(\w+)/gc or $self->_blam('Expected parameter name');
+
+        my $name = $1;
+
+        # check for = or ~ on the end
+
+        /\G\=/gc
+          ? push(@required, $name)
+          : (/\G\~/gc or $self->_blam('Expected = or ~ after parameter name'));
+
+        # record the key in the right category depending on the multi (@) flag
+
+        $multi ? (push @single, $name) : ($multi{$name} = 1);
+      }
+    } while (/\G\&/gc) }
+
+    return sub {
+      my $raw = $unpacker->($_[0]);
+      foreach my $name (@required) {
+        return unless exists $raw->{$name};
+      }
+      my %p;
+      foreach my $name (
+        @single,
+        ($star
+          ? (grep { !exists $multi{$_} } keys %$raw)
+          : ()
+        )
+      ) {
+        $p{$name} = $raw->{$name}->[-1] if exists $raw->{$name};
+      }
+      foreach my $name (
+        keys %multi,
+        ($multistar
+          ? (grep { !exists $p{$_} } keys %$raw)
+          : ()
+        )
+      ) {
+        $p{$name} = $raw->{$name}||[];
+      }
+      return ({}, \%p);
     };
   }
 }

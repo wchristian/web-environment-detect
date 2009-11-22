@@ -431,6 +431,50 @@ Additionally,
 will match any extension and supplies the stripped extension as a match
 argument.
 
+=head3 Query and body parameter matches
+
+Query and body parameters can be match via
+
+  sub (?<param spec>) { # match URI query
+  sub (%<param spec>) { # match body params
+
+The body is only matched if the content type is
+application/x-www-form-urlencoded (note this means that Web::Simple does
+not yet handle uploads; this will be addressed in a later release).
+
+The param spec is elements of one of the following forms -
+
+  param~        # optional parameter
+  param=        # required parameter
+  @param~       # optional multiple parameter
+  @param=       # required multiple parameter
+  *             # include all other parameters
+  @*            # include all other parameters as multiple
+
+separated by the & character.
+
+So, to match a page parameter with an optional order_by parameter one
+would write:
+
+  sub (?page=&order_by~) {
+
+Parameters selected are turned into a hashref; in the case of singular
+parameters then if multiple values are found the last one is used. In the
+case of multiple parameters an arrayref of all values (or an empty arrayref
+for a missing optional) is used. The resulting hashref is provided as a
+match argument. So we might write something like:
+
+  sub (?page=&order_by~) {
+    my ($self, $p) = @_;
+    return unless $p->{page} =~ /^\d+$/;
+    $p->{order_by} ||= 'id';
+    response_filter {
+      $_[1]->search_rs({}, $p);
+    }
+  }
+
+to implement paging and ordering against a L<DBIx::Class::ResultSet> object.
+
 =head3 Combining matches
 
 Matches may be combined with the + character - e.g.
