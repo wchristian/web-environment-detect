@@ -119,3 +119,20 @@ is_deeply(
   [],
   'GET|POST does not match PUT'
 );
+
+$or = $dp->parse_dispatch_specification('GET|POST|DELETE');
+
+foreach my $meth (qw(GET POST DELETE)) {
+
+  is_deeply(
+    [ $or->({ REQUEST_METHOD => $meth }) ],
+    [ {} ],
+    'GET|POST|DELETE matches method '.$meth
+  );
+}
+
+is_deeply(
+  [ $or->({ REQUEST_METHOD => 'PUT' }) ],
+  [],
+  'GET|POST|DELETE does not match PUT'
+);
