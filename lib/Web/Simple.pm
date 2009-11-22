@@ -375,17 +375,68 @@ returns something, of course). This is normally used for rendering - e.g.
     filter_response { $self->render_html($_[1]) }
   }
 
+Additionally,
+
+  sub (.*) {
+
+will match any extension and supplies the stripped extension as a match
+argument.
+
 =head3 Combining matches
 
 Matches may be combined with the + character - e.g.
 
-  sub (GET+/user/*) {
+  sub (GET + /user/*) {
+
+to create an AND match. They may also be combined withe the | character - e.g.
+
+  sub (GET|POST) {
+
+to create an OR match. Matches can be nested with () - e.g.
+
+  sub ((GET|POST) + /user/*) {
+
+and negated with ! - e.g.
+
+  sub (!/user/foo + /user/*) {
+
+! binds to the immediate rightmost match specification, so if you want
+to negate a combination you will need to use
+
+  sub ( !(POST|PUT|DELETE) ) {
+
+and | binds tighter than +, so
+
+  sub ((GET|POST) + /user/*) {
+
+and
+
+  sub (GET|POST + /user/*) {
+
+are equivalent, but
+
+  sub ((GET + .html) | (POST + .html)) {
+
+and
+
+  sub (GET + .html | POST + .html) {
+
+are not - the latter is equivalent to
+
+  sub (GET + (.html|POST) + .html) {
+
+which will never match.
+
+=head3 Whitespace
 
 Note that for legibility you are permitted to use whitespace -
 
   sub (GET + /user/*) {
 
-but it will be ignored.
+but it will be ignored. This is because the perl parser strips whitespace
+from subroutine prototypes, so this is equivalent to
+
+  sub (GET+/user/*) {
 
 =cut
 
