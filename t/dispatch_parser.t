@@ -40,6 +40,21 @@ is_deeply(
   '.xml does not match .html'
 );
 
+my $any_ext = $dp->parse_dispatch_specification('.*');
+
+is_deeply(
+  [ $any_ext->({ PATH_INFO => '/foo/bar.html' }) ],
+  [ { PATH_INFO => '/foo/bar' }, 'html' ],
+  '.html matches .* and extension returned'
+);
+
+is_deeply(
+  [ $any_ext->({ PATH_INFO => '/foo/bar' }) ],
+  [],
+  'no extension does not match .*'
+);
+
+
 my $slash = $dp->parse_dispatch_specification('/');
 
 is_deeply(
@@ -86,4 +101,21 @@ is_deeply(
   [ $combi->({ PATH_INFO => '/post/one', REQUEST_METHOD => 'POST' }) ],
   [],
   'POST /post/one does not match'
+);
+
+my $or = $dp->parse_dispatch_specification('GET|POST');
+
+foreach my $meth (qw(GET POST)) {
+
+  is_deeply(
+    [ $or->({ REQUEST_METHOD => $meth }) ],
+    [ {} ],
+    'GET|POST matches method '.$meth
+  );
+}
+
+is_deeply(
+  [ $or->({ REQUEST_METHOD => 'PUT' }) ],
+  [],
+  'GET|POST does not match PUT'
 );

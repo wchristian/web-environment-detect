@@ -15,15 +15,21 @@ ${hat} here\n";
 
 sub parse_dispatch_specification {
   my ($self, $spec) = @_;
-  for ($spec) {
+  return $self->_parse_spec($spec);
+}
+
+sub _parse_spec {
+  my ($self, $spec) = @_;
+  for ($_[1]) {
     my @match;
     local $self->{already_have};
     /^\G\s*/; # eat leading whitespace
     PARSE: { do {
-      push @match, $self->_parse_spec_section($spec)
+      push @match, $self->_parse_spec_section($_)
         or $self->_blam("Unable to work out what the next section is");
       last PARSE if (pos == length);
-      /\G\+/gc or $self->_blam('Spec sections must be separated by +');
+      $match[-1] = $self->_parse_spec_combinator($_, $match[-1])
+        or $self->_blam('No valid combinator - expected + or |');
     } until (pos == length) }; # accept trailing whitespace
     return $match[0] if (@match == 1);
     return sub {
@@ -66,10 +72,42 @@ sub _parse_spec_section {
     /\G(?=\/)/gc and
       return $self->_url_path_match($_);
 
-    /\G\.(\w+)/gc and
+    # .* and .html
+
+    /\G\.(\*|\w+)/gc and
       return $self->_url_extension_match($_, $1);
   }
   return; # () will trigger the blam in our caller
+}
+
+sub _parse_spec_combinator {
+  my ($self, $spec, $match) = @_;
+  for ($_[1]) {
+
+    /\G\+/gc and
+      return $match;
+
+    /\G\|/gc and
+      return do {
+        my @match = $match;
+        PARSE: { do {
+          local $self->{already_have};
+          push @match, $self->_parse_spec_section($_)
+            or $self->_blam("Unable to work out what the next section is");
+          last PARSE if (pos == length);
+          last PARSE unless /\G\|/gc; # give up when next thing isn't |
+        } until (pos == length) }; # accept trailing whitespace
+        return sub {
+          foreach my $try (@match) {
+            if (my @ret = $try->(@_)) {
+              return @ret;
+            }
+          }
+          return;
+        };
+      };
+  }
+  return;
 }
 
 sub _http_method_match {
@@ -120,13 +158,23 @@ sub _url_path_segment_match {
 sub _url_extension_match {
   my ($self, $str, $extension) = @_;
   $self->_dupe_check('extension');
-  sub {
-    if ((my $tmp = shift->{PATH_INFO}) =~ s/\.\Q${extension}\E$//) {
-      ({ PATH_INFO => $tmp });
-    } else {
-      ();
-    }
-  };
+  if ($extension eq '*') {
+    sub {
+      if ((my $tmp = shift->{PATH_INFO}) =~ s/\.(\w+)$//) {
+        ({ PATH_INFO => $tmp }, $1);
+      } else {
+        ();
+      }
+    };
+  } else {
+    sub {
+      if ((my $tmp = shift->{PATH_INFO}) =~ s/\.\Q${extension}\E$//) {
+        ({ PATH_INFO => $tmp });
+      } else {
+        ();
+      }
+    };
+  }
 }
 
 1;
