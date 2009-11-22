@@ -25,7 +25,7 @@ use warnings FATAL => 'all';
 
   sub dispatch {
     my ($self, $env, @args) = @_;
-    my $next = $self->next;
+    my $next = $self->_has_match ? $self->next : undef;
     if (my ($env_delta, @match) = $self->_match_against($env)) {
       if (my ($result) = $self->_execute_with(@args, @match)) {
         if ($self->_is_dispatcher($result)) {
@@ -36,8 +36,17 @@ use warnings FATAL => 'all';
         }
       }
     }
+    return () unless $next;
     return $next->dispatch($env, @args);
   }
+
+  sub call {
+    @_ > 1
+      ? $_[0]->{call} = $_[1]
+      : shift->{call}
+  }
+
+  sub _has_match { $_[0]->{match} }
 
   sub _match_against {
      return ({}, $_[1]) unless $_[0]->{match};
@@ -81,7 +90,9 @@ sub _construct_response_filter {
   $_[0]->_build_dispatcher({
     call => sub {
       my ($d, $self, $env) = (shift, shift, shift);
-      $self->_run_with_self($code, $d->next->dispatch($env, $self, @_));
+      my @next = $d->next->dispatch($env, $self, @_);
+      return unless @next;
+      $self->_run_with_self($code, @next);
     },
   });
 }
@@ -112,36 +123,75 @@ sub _cannot_call_twice {
 }
 
 sub _setup_dispatcher {
-  my ($class, $dispatch_subs) = @_;
+  my ($class, $dispatch_specs) = @_;
   {
     no strict 'refs';
     if (${"${class}::_dispatcher"}{CODE}) {
       $class->_cannot_call_twice('_setup_dispatcher', 'dispatch');
     }
   }
-  my $parser = $class->_build_dispatch_parser;
-  my ($root, $last);
-  foreach my $dispatch_sub (@$dispatch_subs) {
-    my $proto = prototype $dispatch_sub;
-    my $matcher = (
-      defined($proto)
-        ? $parser->parse_dispatch_specification($proto)
-        : undef
-    );
-    my $new = $class->_build_dispatcher({
-      match => $matcher,
-      call => sub { shift;
-        shift->_run_with_self($dispatch_sub, @_)
-      },
+  my $chain = $class->_build_dispatch_chain(
+    [ @$dispatch_specs, $class->_build_final_dispatcher ]
+  );
+  {
+    no strict 'refs';
+    *{"${class}::_dispatcher"} = sub { $chain };
+  }
+}
+
+sub _construct_subdispatch {
+  my ($class, $dispatch_spec) = @_;
+  my $disp = $class->_build_dispatcher_from_spec($dispatch_spec);
+  my $call = $disp->call;
+  $disp->call(sub {
+    my @res = $call->(@_);
+    return unless @res;
+    my $chain = $class->_build_dispatch_chain(@res);
+    return $class->_build_dispatcher({
+      call => sub {
+        my ($d, $self, $env) = (shift, shift, shift);
+        return $chain->dispatch($env, $self, @_);
+      }
     });
+  });
+  return $class->_build_dispatcher({
+    call => sub {
+      my ($d, $self, $env) = (shift, shift, shift);
+      my @sub = $disp->dispatch($env, $self, @_);
+      return @sub if @sub;
+      return unless (my $next = $d->next);
+      return $next->dispatch($env, $self, @_);
+    },
+  });
+}
+
+sub _build_dispatcher_from_spec {
+  my ($class, $spec) = @_;
+  return $spec unless ref($spec) eq 'CODE';
+  my $proto = prototype $spec;
+  my $parser = $class->_build_dispatch_parser;
+  my $matcher = (
+    defined($proto)
+      ? $parser->parse_dispatch_specification($proto)
+      : undef
+  );
+  return $class->_build_dispatcher({
+    match => $matcher,
+    call => sub { shift;
+      shift->_run_with_self($spec, @_)
+    },
+  });
+}
+
+sub _build_dispatch_chain {
+  my ($class, $dispatch_specs) = @_;
+  my ($root, $last);
+  foreach my $dispatch_spec (@$dispatch_specs) {
+    my $new = $class->_build_dispatcher_from_spec($dispatch_spec);
     $root ||= $new;
     $last = $last ? $last->next($new) : $new;
   }
-  $last->next($class->_build_final_dispatcher);
-  {
-    no strict 'refs';
-    *{"${class}::_dispatcher"} = sub { $root };
-  }
+  return $root;
 }
 
 sub _build_dispatcher {

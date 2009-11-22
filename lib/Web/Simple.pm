@@ -36,6 +36,9 @@ sub _export_into {
     *{"${app_package}::redispatch_to"} = sub {
       $app_package->_construct_redispatch($_[0]);
     };
+    *{"${app_package}::subdispatch"} = sub ($) {
+      $app_package->_construct_subdispatch($_[0]);
+    };
     *{"${app_package}::default_config"} = sub {
       $app_package->_setup_default_config(@_);
     };
@@ -149,6 +152,8 @@ It also exports the following subroutines:
 
   redispatch_to '/somewhere';
 
+  subdispatch sub (...) { ... }
+
 and creates a $self global variable in your application package, so you can
 use $self in dispatch subs without violating strict (Web::Simple::Application
 arranges for dispatch subroutines to have the correct $self in scope when
@@ -250,6 +255,26 @@ but with the path of the request altered to the supplied URL.
 Thus if you receive a POST to '/some/url' and return a redipstch to
 '/other/url', the dispatch behaviour will be exactly as if the same POST
 request had been made to '/other/url' instead.
+
+=head2 subdispatch
+
+  subdispatch sub (/user/*/) {
+    my $u = $self->user($_[1]);
+    [
+      sub (GET) { $u },
+      sub (DELETE) { $u->delete },
+    ]
+  }
+
+The subdispatch subroutine is designed for use in dispatcher construction.
+
+It creates a dispatcher which, if it matches, treats its return value not
+as a final value but an arrayref of dispatch specifications such as could
+be passed to the dispatch subroutine itself. These are turned into a dispatcher
+which is then invoked. Any changes the match makes to the request are in
+scope for this inner dispatcher only - so if the initial match is a
+destructive one like .html the full path will be restored if the
+subdispatch fails.
 
 =head1 DISPATCH STRATEGY
 
