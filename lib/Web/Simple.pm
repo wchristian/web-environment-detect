@@ -208,8 +208,14 @@ the subroutines passed to it, which then creates your Web::Simple
 application's dispatcher from these subs. The prototype of the subroutine
 is expected to be a Web::Simple dispatch specification (see
 L</DISPATCH SPECIFICATIONS> below for more details), and the body of the
-subroutine is the code to execute if the specification matches. See
-L</DISPATCH STRATEGY> below for details on how the Web::Simple dispatch
+subroutine is the code to execute if the specification matches.
+
+Each dispatcher is given the dispatcher constructed from the next element
+of the arrayref as its next dispatcher, except for the final element, which
+is given the return value of NameOfApplication->_build_final_dispatcher
+as its next dispatcher (by default this returns a 500 error response).
+
+See L</DISPATCH STRATEGY> below for details on how the Web::Simple dispatch
 system uses the return values of these subroutines to determine how to
 continue, alter or abort dispatch.
 
