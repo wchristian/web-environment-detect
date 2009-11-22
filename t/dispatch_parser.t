@@ -180,3 +180,23 @@ is_deeply(
     "Error $@ matches\n${err}\n"
   );
 }
+
+my $not = $dp->parse_dispatch_specification('!.html+.*');
+
+is_deeply(
+  [ $not->({ PATH_INFO => '/foo.xml' }) ],
+  [ { PATH_INFO => '/foo' }, 'xml' ],
+  '!.html+.* matches /foo.xml'
+);
+
+is_deeply(
+  [ $not->({ PATH_INFO => '/foo.html' }) ],
+  [],
+  '!.html+.* does not match /foo.html'
+);
+
+is_deeply(
+  [ $not->({ PATH_INFO => '/foo' }) ],
+  [],
+  '!.html+.* does not match /foo'
+);

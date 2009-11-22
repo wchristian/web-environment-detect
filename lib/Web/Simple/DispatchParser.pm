@@ -22,7 +22,6 @@ sub _parse_spec {
   my ($self, $spec, $nested) = @_;
   for ($_[1]) {
     my @match;
-    local $self->{already_have};
     /^\G\s*/; # eat leading whitespace
     PARSE: { do {
       push @match, $self->_parse_spec_section($_)
@@ -59,13 +58,6 @@ sub _parse_spec {
   }
 }
 
-sub _dupe_check {
-  my ($self, $type) = @_;
-  $self->_blam("Can't have more than one ${type} match in a specification")
-    if $self->{already_have}{$type};
-  $self->{already_have}{$type} = 1;
-}
-
 sub _parse_spec_section {
   my ($self) = @_;
   for ($_[1]) {
@@ -85,10 +77,21 @@ sub _parse_spec_section {
     /\G\.(\*|\w+)/gc and
       return $self->_url_extension_match($_, $1);
 
-    # (
+    # (...)
 
     /\G\(/gc and
       return $self->_parse_spec($_, pos);
+
+    # !something
+
+    /\G!/gc and
+      return do {
+        my $match = $self->_parse_spec_section($_);
+        return sub {
+          return {} unless $match->(@_);
+          return;
+        };
+      };
   }
   return; # () will trigger the blam in our caller
 }
@@ -104,7 +107,6 @@ sub _parse_spec_combinator {
       return do {
         my @match = $match;
         PARSE: { do {
-          local $self->{already_have};
           push @match, $self->_parse_spec_section($_)
             or $self->_blam("Unable to work out what the next section is");
           last PARSE if (pos == length);
@@ -125,13 +127,11 @@ sub _parse_spec_combinator {
 
 sub _http_method_match {
   my ($self, $str, $method) = @_;
-  $self->_dupe_check('method');
   sub { shift->{REQUEST_METHOD} eq $method ? {} : () };
 }
 
 sub _url_path_match {
   my ($self) = @_;
-  $self->_dupe_check('path');
   for ($_[1]) {
     my @path;
     while (/\G\//gc) {
@@ -170,7 +170,6 @@ sub _url_path_segment_match {
 
 sub _url_extension_match {
   my ($self, $str, $extension) = @_;
-  $self->_dupe_check('extension');
   if ($extension eq '*') {
     sub {
       if ((my $tmp = shift->{PATH_INFO}) =~ s/\.(\w+)$//) {
