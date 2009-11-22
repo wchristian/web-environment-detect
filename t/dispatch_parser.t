@@ -136,3 +136,29 @@ is_deeply(
   [],
   'GET|POST|DELETE does not match PUT'
 );
+
+my $nest = $dp->parse_dispatch_specification('(GET+/foo)|POST');
+
+is_deeply(
+  [ $nest->({ PATH_INFO => '/foo', REQUEST_METHOD => 'GET' }) ],
+  [ {} ],
+  '(GET+/foo)|POST matches GET /foo'
+);
+
+is_deeply(
+  [ $nest->({ PATH_INFO => '/bar', REQUEST_METHOD => 'GET' }) ],
+  [],
+  '(GET+/foo)|POST does not match GET /bar'
+);
+
+is_deeply(
+  [ $nest->({ PATH_INFO => '/bar', REQUEST_METHOD => 'POST' }) ],
+  [ {} ],
+  '(GET+/foo)|POST matches POST /bar'
+);
+
+is_deeply(
+  [ $nest->({ PATH_INFO => '/foo', REQUEST_METHOD => 'PUT' }) ],
+  [],
+  '(GET+/foo)|POST does not match PUT /foo'
+);

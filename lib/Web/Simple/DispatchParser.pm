@@ -19,7 +19,7 @@ sub parse_dispatch_specification {
 }
 
 sub _parse_spec {
-  my ($self, $spec) = @_;
+  my ($self, $spec, $nested) = @_;
   for ($_[1]) {
     my @match;
     local $self->{already_have};
@@ -27,10 +27,18 @@ sub _parse_spec {
     PARSE: { do {
       push @match, $self->_parse_spec_section($_)
         or $self->_blam("Unable to work out what the next section is");
+      if (/\G\)/gc) {
+        $self->_blam("Found closing ) with no opening (") unless $nested;
+        last PARSE;
+      }
       last PARSE if (pos == length);
       $match[-1] = $self->_parse_spec_combinator($_, $match[-1])
         or $self->_blam('No valid combinator - expected + or |');
     } until (pos == length) }; # accept trailing whitespace
+    if ($nested and pos == length) {
+      pos = $nested;
+      $self->_blam("No closing ) found for opening (");
+    }
     return $match[0] if (@match == 1);
     return sub {
       my $env = { %{$_[0]} };
@@ -76,6 +84,11 @@ sub _parse_spec_section {
 
     /\G\.(\*|\w+)/gc and
       return $self->_url_extension_match($_, $1);
+
+    # (
+
+    /\G\(/gc and
+      return $self->_parse_spec($_, pos);
   }
   return; # () will trigger the blam in our caller
 }
