@@ -30,7 +30,7 @@ sub _export_into {
     *{"${app_package}::dispatch"} = sub {
       $app_package->_setup_dispatcher(@_);
     };
-    *{"${app_package}::filter_response"} = sub (&) {
+    *{"${app_package}::response_filter"} = sub (&) {
       $app_package->_construct_response_filter($_[0]);
     };
     *{"${app_package}::redispatch_to"} = sub {
@@ -148,7 +148,7 @@ It also exports the following subroutines:
 
   dispatch [ sub (...) { ... }, ... ];
 
-  filter_response { ... };
+  response_filter { ... };
 
   redispatch_to '/somewhere';
 
@@ -421,7 +421,7 @@ will match and strip .html from the path (assuming the subroutine itself
 returns something, of course). This is normally used for rendering - e.g.
 
   sub (.html) {
-    filter_response { $self->render_html($_[1]) }
+    response_filter { $self->render_html($_[1]) }
   }
 
 Additionally,

@@ -86,7 +86,7 @@ sub post {
 
 dispatch [
   sub (.html) {
-    filter_response { $self->render_html($_[1]) },
+    response_filter { $self->render_html($_[1]) },
   },
   sub (GET + /) {
     redispatch_to '/index.html';
