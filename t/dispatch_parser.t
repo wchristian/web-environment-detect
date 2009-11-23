@@ -220,3 +220,53 @@ is_deeply(
   [],
   '/foo/*/... does not match /foo/1 (no trailing /)'
 );
+
+my $q = 'foo=FOO&bar=BAR1&baz=one+two&quux=QUUX1&quux=QUUX2'
+        .'&bar=BAR2&quux=QUUX3&evil=%2F';
+
+my %all_single = (
+  foo => 'FOO',
+  bar => 'BAR2',
+  baz => 'one two',
+  quux => 'QUUX3',
+  evil => '/',
+);
+
+my %all_multi = (
+  foo => [ 'FOO' ],
+  bar => [ qw(BAR1 BAR2) ],
+  baz => [ 'one two' ],
+  quux => [ qw(QUUX1 QUUX2 QUUX3) ],
+  evil => [ '/' ],
+);
+
+my $foo = $dp->parse_dispatch_specification('?foo=');
+
+is_deeply(
+  [ $foo->({ QUERY_STRING => '' }) ],
+  [],
+  '?foo= fails with no query'
+);
+
+foreach my $win (
+  [ '?foo=' => { foo => 'FOO' } ],
+  [ '?spoo~' => { } ],
+  [ '?@spoo~' => { spoo => [] } ],
+  [ '?bar=' => { bar => 'BAR2' } ],
+  [ '?@bar=' => { bar => [ qw(BAR1 BAR2) ] } ],
+  [ '?foo=&@bar=' => { foo => 'FOO', bar => [ qw(BAR1 BAR2) ] } ],
+  [ '?baz=&evil=' => { baz => 'one two', evil => '/' } ],
+  [ '?*' => \%all_single ],
+  [ '?@*' => \%all_multi ],
+  [ '?foo=&@*' => { %all_multi, foo => 'FOO' } ],
+  [ '?@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
+) {
+  my ($spec, $res) = @$win;
+  my $match = $dp->parse_dispatch_specification($spec);
+#use Data::Dump::Streamer; warn Dump($match);
+  is_deeply(
+    [ $match->({ QUERY_STRING => $q }) ],
+    [ {}, $res ],
+    "${spec} matches correctly"
+  );
+}

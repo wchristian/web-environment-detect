@@ -25,8 +25,9 @@ sub get_unpacked_query_from {
 
   sub _unpack_params {
     my %unpack;
+    (my $params = $_[0]) =~ s/\+/ /g;
     my ($name, $value);
-    foreach my $pair (split(/[&;](?:\s+)?/, $_[0])) {
+    foreach my $pair (split(/[&;](?:\s+)?/, $params)) {
       next unless (($name, $value) = split(/=/, $pair, 2)) == 2;
         
       s/$DECODE/$hex_chr{$1}/gs for ($name, $value);

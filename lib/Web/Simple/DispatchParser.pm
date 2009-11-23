@@ -3,6 +3,17 @@ package Web::Simple::DispatchParser;
 use strict;
 use warnings FATAL => 'all';
 
+sub DEBUG () { 0 }
+
+BEGIN {
+  if ($ENV{WEB_SIMPLE_DISPATCHPARSER_DEBUG}) {
+    no warnings 'redefine';
+    *DEBUG = sub () { 1 }
+  }
+}
+
+sub diag { if (DEBUG) { warn $_[0] } }
+
 sub new { bless({}, ref($_[0])||$_[0]) }
 
 sub _blam {
@@ -215,7 +226,7 @@ sub _parse_param_handler {
   my $unpacker = Web::Simple::ParamParser->can("get_unpacked_${type}_from");
 
   for ($_[1]) {
-    my (@required, @single, %multi, $star, $multistar) = @_;
+    my (@required, @single, %multi, $star, $multistar);
     PARAM: { do {
 
       # per param flag
@@ -228,9 +239,13 @@ sub _parse_param_handler {
 
       # @* or *
 
-      if (/\G\*/) {
+      if (/\G\*/gc) {
 
         $multi ? ($multistar = 1) : ($star = 1);
+
+        if ($star && $multistar) {
+          $self->_blam("Can't use * and \@* in the same parameter match");
+        }
       } else {
 
         # @foo= or foo= or @foo~ or foo~
@@ -247,7 +262,7 @@ sub _parse_param_handler {
 
         # record the key in the right category depending on the multi (@) flag
 
-        $multi ? (push @single, $name) : ($multi{$name} = 1);
+        $multi ? ($multi{$name} = 1) : (push @single, $name);
       }
     } while (/\G\&/gc) }
 
