@@ -27,8 +27,8 @@ sub _export_into {
   my ($class, $app_package) = @_;
   {
     no strict 'refs';
-    *{"${app_package}::dispatch"} = sub {
-      $app_package->_setup_dispatcher(@_);
+    *{"${app_package}::dispatch"} = sub (&) {
+      $app_package->_setup_dispatcher([ $_[0]->() ]);
     };
     *{"${app_package}::response_filter"} = sub (&) {
       $app_package->_construct_response_filter($_[0]);
@@ -75,7 +75,7 @@ we can't promise not to change things at all. Not yet. Sorry.
   {
     package HelloWorld;
 
-    dispatch [
+    dispatch {
       sub (GET) {
         [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
       },
@@ -146,7 +146,7 @@ It also exports the following subroutines:
     ...
   );
 
-  dispatch [ sub (...) { ... }, ... ];
+  dispatch { sub (...) { ... }, ... };
 
   response_filter { ... };
 
@@ -194,24 +194,24 @@ cause an exception to be thrown.
 
 =head2 dispatch
 
-  dispatch [
+  dispatch {
     sub (GET) {
       [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
     },
     sub () {
       [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
     }
-  ];
+  };
 
 The dispatch subroutine calls NameOfApplication->_setup_dispatcher with
-the subroutines passed to it, which then creates your Web::Simple
-application's dispatcher from these subs. The prototype of the subroutine
+the return value of the block passed to it, which then creates your Web::Simple
+application's dispatcher from these subs. The prototype of each subroutine
 is expected to be a Web::Simple dispatch specification (see
 L</DISPATCH SPECIFICATIONS> below for more details), and the body of the
 subroutine is the code to execute if the specification matches.
 
-Each dispatcher is given the dispatcher constructed from the next element
-of the arrayref as its next dispatcher, except for the final element, which
+Each dispatcher is given the dispatcher constructed from the next subroutine
+returned as its next dispatcher, except for the final subroutine, which
 is given the return value of NameOfApplication->_build_final_dispatcher
 as its next dispatcher (by default this returns a 500 error response).
 

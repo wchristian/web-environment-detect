@@ -84,7 +84,7 @@ sub post {
   $self->post_list->post($post);
 }
 
-dispatch [
+dispatch {
   sub (.html) {
     response_filter { $self->render_html($_[1]) },
   },
@@ -103,7 +103,7 @@ dispatch [
   sub {
     [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
   },
-];
+};
 
 sub render_html {
   my ($self, $data) = @_;

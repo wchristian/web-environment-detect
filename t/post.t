@@ -10,7 +10,7 @@ use Test::More (
 {
   use Web::Simple 'PostTest';
   package PostTest;
-  dispatch [
+  dispatch {
     sub (%foo=&bar~) {
       $_[1]->{bar} ||= 'EMPTY';
       [ 200,
@@ -18,7 +18,7 @@ use Test::More (
         [ join(' ',@{$_[1]}{qw(foo bar)}) ]
       ]
     },
-  ]
+  }
 }
 
 use HTTP::Request::Common qw(GET POST);
