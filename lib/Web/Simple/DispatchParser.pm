@@ -136,6 +136,10 @@ sub _parse_spec_section {
     # ?<param spec>
     /\G\?/gc and
       return $self->_parse_param_handler($_, 'query');
+
+    # %<param spec>
+    /\G\%/gc and
+      return $self->_parse_param_handler($_, 'body');
   }
   return; # () will trigger the blam in our caller
 }

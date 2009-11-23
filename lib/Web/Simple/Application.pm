@@ -202,8 +202,8 @@ sub _build_final_dispatcher {
   shift->_build_dispatcher({
     call => sub {
       [
-        500, [ 'Content-type', 'text/plain' ],
-        [ 'The management apologises but we have no idea how to handle that' ]
+        404, [ 'Content-type', 'text/plain' ],
+        [ 'Not found' ]
       ]
     }
   })

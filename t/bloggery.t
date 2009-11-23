@@ -1,5 +1,11 @@
 use strict;
 use warnings FATAL => 'all';
+
+use Test::More qw(no_plan);
+
+require_ok 'examples/bloggery/bloggery.cgi';
+
+__END__
 use Test::More (
   eval { require HTTP::Request::AsCGI }
     ? 'no_plan'

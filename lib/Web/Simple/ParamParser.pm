@@ -4,10 +4,23 @@ use strict;
 use warnings FATAL => 'all';
 
 sub UNPACKED_QUERY () { __PACKAGE__.'.unpacked_query' }
+sub UNPACKED_BODY () { __PACKAGE__.'.unpacked_body' }
 
 sub get_unpacked_query_from {
   return $_[0]->{+UNPACKED_QUERY} ||= do {
     _unpack_params($_[0]->{QUERY_STRING})
+  };
+}
+
+sub get_unpacked_body_from {
+  return $_[0]->{+UNPACKED_BODY} ||= do {
+    if (($_[0]->{CONTENT_TYPE}||'') eq 'application/x-www-form-urlencoded'
+        and defined $_[0]->{CONTENT_LENGTH}) {
+      $_[0]->{'psgi.input'}->read(my $buf, $_[0]->{CONTENT_LENGTH});
+      _unpack_params($buf);
+    } else {
+      {}
+    }
   };
 }
 
