@@ -2,6 +2,9 @@ package Web::Simple;
 
 use strict;
 use warnings FATAL => 'all';
+use 5.008;
+
+our $VERSION = '0.001';
 
 sub setup_all_strictures {
   strict->import;
@@ -56,15 +59,17 @@ Web::Simple - A quick and easy way to build simple web applications
 
 =head1 WARNING
 
-This is really quite new. If you're reading this from git, it means it's
-really really new and we're still playing with things. If you're reading
-this on CPAN, it means the stuff that's here we're probably happy with. But
-only probably. So we may have to change stuff.
+This is really quite new. If you're reading this on CPAN, it means the stuff
+that's here we're probably happy with. But only probably. So we may have to
+change stuff. And if you're reading this from git, come check with irc.perl.org
+#web-simple that we're actually sure we're going to keep anything that's
+different from the CPAN version.
 
-If we do find we have to change stuff we'll add a section explaining how to
-switch your code across to the new version, and we'll do our best to make it
-as painless as possible because we've got Web::Simple applications too. But
-we can't promise not to change things at all. Not yet. Sorry.
+If we do find we have to change stuff we'll add to the
+L<CHANGES BETWEEN RELEASES> section explaining how to switch your code across
+to the new version, and we'll do our best to make it as painless as possible
+because we've got Web::Simple applications too. But we can't promise not to
+change things at all. Not yet. Sorry.
 
 =head1 SYNOPSIS
 
@@ -92,7 +97,8 @@ If you save this file into your cgi-bin as hello-world.cgi and then visit
   http://my.server.name/cgi-bin/hello-world.cgi/
 
 you'll get the "Hello world!" string output to your browser. For more complex
-examples and non-CGI deployment, see below.
+examples and non-CGI deployment, see below. To get help with Web::Simple,
+please connect to the irc.perl.org IRC network and join #web-simple.
 
 =head1 WHY?
 
@@ -473,11 +479,28 @@ would write:
 
 to implement paging and ordering against a L<DBIx::Class::ResultSet> object.
 
+Note that if a parameter is specified as single and multiple values are found,
+the last one will be used.
+
 To get all parameters as a hashref of arrayrefs, write:
 
   sub(?@*) {
     my ($self, $params) = @_;
     ...
+
+To get two parameters as a hashref, write:
+
+  sub(?:user~&:domain~) {
+    my ($self, $params) = @_; # params contains only 'user' and 'domain' keys
+
+You can also mix these, so:
+
+  sub (?foo=&@bar~&:coffee=&@*) {
+     my ($self, $foo, $bar, $params);
+
+where $bar is an arrayref (possibly an empty one), and $params contains
+arrayref values for all parameters -not- mentioned and a scalar value for
+the 'coffee' parameter.
 
 =head3 Combining matches
 
@@ -534,6 +557,64 @@ but it will be ignored. This is because the perl parser strips whitespace
 from subroutine prototypes, so this is equivalent to
 
   sub (GET+/user/*) {
+
+=head1 CHANGES BETWEEN RELEASES
+
+=head2 Changes since Antiquated Perl
+
+=over 4
+
+=item * filter_response renamed to response_filter
+
+This is a pure rename; a global search and replace should fix it.
+
+=item * dispatch [] changed to dispatch []
+
+Simply changing
+
+  dispatch [ sub(...) { ... }, ... ];
+
+to
+
+  dispatch { sub(...) { ... }, ... };
+
+should work fine.
+
+=back
+
+=head1 COMMUNITY AND SUPPORT
+
+=head2 IRC channel
+
+irc.perl.org #web-simple
+
+=head2 No mailing list yet
+
+Because mst's non-work email is a bombsite so he'd never read it anyway.
+
+=head2 Git repository
+
+Gitweb is on http://git.shadowcat.co.uk/ and the clone URL is:
+
+  git clone git://git.shadowcat.co.uk/catagits/Web-Simple.git
+
+=head1 AUTHOR
+
+Matt S. Trout <mst@shadowcat.co.uk>
+
+=head1 CONTRIBUTORS
+
+None required yet. Maybe this module is perfect (hahahahaha ...).
+
+=head1 COPYRIGHT
+
+Copyright (c) 2009 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
+as listed above.
+
+=head1 LICENSE
+
+This library is free software and may be distributed under the same terms
+as perl itself.
 
 =cut
 
