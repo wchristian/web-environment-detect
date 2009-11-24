@@ -5,8 +5,6 @@ use Test::More qw(no_plan);
 
 use Web::Simple::ParamParser;
 
-use Data::Dumper::Concise;
-
 my $param_sample = 'foo=bar&baz=quux&foo=%2F';
 my $unpacked = {
   baz => [
