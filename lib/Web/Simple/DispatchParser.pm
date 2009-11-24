@@ -230,22 +230,27 @@ sub _parse_param_handler {
   my $unpacker = Web::Simple::ParamParser->can("get_unpacked_${type}_from");
 
   for ($_[1]) {
-    my (@required, @single, %multi, $star, $multistar);
+    my (@required, @single, %multi, $star, $multistar, %positional, $have_kw);
+    my $pos_idx = 0;
     PARAM: { do {
 
-      # per param flag
+      # ?:foo or ?@:foo
 
-      my $multi = 0;
+      my $is_kw = /\G\:/gc;
 
       # ?@foo or ?@*
 
-      /\G\@/gc and $multi = 1;
+      my $multi = /\G\@/gc;
 
       # @* or *
 
       if (/\G\*/gc) {
 
+        $self->_blam("* is always named; no need to supply :") if $is_kw;
+
         $multi ? ($multistar = 1) : ($star = 1);
+
+        $have_kw = 1;
 
         if ($star && $multistar) {
           $self->_blam("Can't use * and \@* in the same parameter match");
@@ -267,6 +272,10 @@ sub _parse_param_handler {
         # record the key in the right category depending on the multi (@) flag
 
         $multi ? ($multi{$name} = 1) : (push @single, $name);
+
+        # record positional or keyword
+
+        $is_kw ? ($have_kw = 1) : ($positional{$name} = $pos_idx++);
       }
     } while (/\G\&/gc) }
 
@@ -275,7 +284,8 @@ sub _parse_param_handler {
       foreach my $name (@required) {
         return unless exists $raw->{$name};
       }
-      my %p;
+      my (%p, %done);
+      my @p = (undef) x $pos_idx;
       foreach my $name (
         @single,
         ($star
@@ -283,18 +293,30 @@ sub _parse_param_handler {
           : ()
         )
       ) {
-        $p{$name} = $raw->{$name}->[-1] if exists $raw->{$name};
+        if (exists $raw->{$name}) {
+          if (exists $positional{$name}) {
+            $p[$positional{$name}] = $raw->{$name}->[-1];
+          } else {
+            $p{$name} = $raw->{$name}->[-1];
+          }
+        }
+        $done{$name} = 1;
       }
       foreach my $name (
         keys %multi,
         ($multistar
-          ? (grep { !exists $p{$_} } keys %$raw)
+          ? (grep { !exists $done{$_} && !exists $multi{$_} } keys %$raw)
           : ()
         )
       ) {
-        $p{$name} = $raw->{$name}||[];
+        if (exists $positional{$name}) {
+          $p[$positional{$name}] = $raw->{$name}||[];
+        } else {
+          $p{$name} = $raw->{$name}||[];
+        }
       }
-      return ({}, \%p);
+      $p[$pos_idx] = \%p if $have_kw;
+      return ({}, @p);
     };
   }
 }

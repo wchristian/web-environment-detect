@@ -240,33 +240,49 @@ my %all_multi = (
   evil => [ '/' ],
 );
 
-my $foo = $dp->parse_dispatch_specification('?foo=');
+foreach my $lose ('?foo=','?:foo=','?@foo=','?:@foo=') {
+  my $foo = $dp->parse_dispatch_specification($lose);
 
-is_deeply(
-  [ $foo->({ QUERY_STRING => '' }) ],
-  [],
-  '?foo= fails with no query'
-);
+  is_deeply(
+    [ $foo->({ QUERY_STRING => '' }) ],
+    [],
+    "${lose} fails with no query"
+  );
+
+  is_deeply(
+    [ $foo->({ QUERY_STRING => 'bar=baz' }) ],
+    [],
+    "${lose} fails with query missing foo key"
+  );
+}
 
 foreach my $win (
-  [ '?foo=' => { foo => 'FOO' } ],
-  [ '?spoo~' => { } ],
-  [ '?@spoo~' => { spoo => [] } ],
-  [ '?bar=' => { bar => 'BAR2' } ],
-  [ '?@bar=' => { bar => [ qw(BAR1 BAR2) ] } ],
-  [ '?foo=&@bar=' => { foo => 'FOO', bar => [ qw(BAR1 BAR2) ] } ],
-  [ '?baz=&evil=' => { baz => 'one two', evil => '/' } ],
+  [ '?foo=' => 'FOO' ],
+  [ '?:foo=' => { foo => 'FOO' } ],
+  [ '?spoo~' => undef ],
+  [ '?:spoo~' => {} ],
+  [ '?@spoo~' => [] ],
+  [ '?:@spoo~' => { spoo => [] } ],
+  [ '?bar=' => 'BAR2' ],
+  [ '?:bar=' => { bar => 'BAR2' } ],
+  [ '?@bar=' => [ qw(BAR1 BAR2) ] ],
+  [ '?:@bar=' => { bar => [ qw(BAR1 BAR2) ] } ],
+  [ '?foo=&@bar=' => 'FOO', [ qw(BAR1 BAR2) ] ],
+  [ '?foo=&:@bar=' => 'FOO', { bar => [ qw(BAR1 BAR2) ] } ],
+  [ '?:foo=&:@bar=' => { foo => 'FOO', bar => [ qw(BAR1 BAR2) ] } ],
+  [ '?:baz=&:evil=' => { baz => 'one two', evil => '/' } ],
   [ '?*' => \%all_single ],
   [ '?@*' => \%all_multi ],
-  [ '?foo=&@*' => { %all_multi, foo => 'FOO' } ],
-  [ '?@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
+  [ '?foo=&@*' => 'FOO', do { my %h = %all_multi; delete $h{foo}; \%h } ],
+  [ '?:foo=&@*' => { %all_multi, foo => 'FOO' } ],
+  [ '?:@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
 ) {
-  my ($spec, $res) = @$win;
+  my ($spec, @res) = @$win;
   my $match = $dp->parse_dispatch_specification($spec);
 #use Data::Dump::Streamer; warn Dump($match);
   is_deeply(
     [ $match->({ QUERY_STRING => $q }) ],
-    [ {}, $res ],
+    [ {}, @res ],
     "${spec} matches correctly"
   );
 }

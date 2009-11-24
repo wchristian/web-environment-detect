@@ -448,32 +448,36 @@ The param spec is elements of one of the following forms -
   param=        # required parameter
   @param~       # optional multiple parameter
   @param=       # required multiple parameter
-  *             # include all other parameters
-  @*            # include all other parameters as multiple
+  :param~       # optional parameter in hashref
+  :param=       # required parameter in hashref
+  :@param~      # optional multiple in hashref
+  :@param=      # required multiple in hashref
+  *             # include all other parameters in hashref
+  @*            # include all other parameters as multiple in hashref
 
-separated by the & character.
+separated by the & character. The arguments added to the request are
+one per non-:/* parameter (scalar for normal, arrayref for multiple),
+plus if any :/* specs exist a hashref containing those values.
 
 So, to match a page parameter with an optional order_by parameter one
 would write:
 
   sub (?page=&order_by~) {
-
-Parameters selected are turned into a hashref; in the case of singular
-parameters then if multiple values are found the last one is used. In the
-case of multiple parameters an arrayref of all values (or an empty arrayref
-for a missing optional) is used. The resulting hashref is provided as a
-match argument. So we might write something like:
-
-  sub (?page=&order_by~) {
-    my ($self, $p) = @_;
-    return unless $p->{page} =~ /^\d+$/;
-    $p->{order_by} ||= 'id';
+    my ($self, $page, $order_by) = @_;
+    return unless $page =~ /^\d+$/;
+    $page ||= 'id';
     response_filter {
       $_[1]->search_rs({}, $p);
     }
   }
 
 to implement paging and ordering against a L<DBIx::Class::ResultSet> object.
+
+To get all parameters as a hashref of arrayrefs, write:
+
+  sub(?@*) {
+    my ($self, $params) = @_;
+    ...
 
 =head3 Combining matches
 
