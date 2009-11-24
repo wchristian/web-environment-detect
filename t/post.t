@@ -11,7 +11,7 @@ use Test::More (
   use Web::Simple 'PostTest';
   package PostTest;
   dispatch {
-    sub (%foo=&bar~) {
+    sub (%:foo=&:bar~) {
       $_[1]->{bar} ||= 'EMPTY';
       [ 200,
         [ "Content-type" => "text/plain" ],
