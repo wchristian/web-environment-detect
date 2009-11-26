@@ -87,7 +87,7 @@ change things at all. Not yet. Sorry.
       sub () {
         [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
       }
-    ];
+    };
   }
 
   HelloWorld->run_if_script;
