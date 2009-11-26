@@ -365,7 +365,7 @@ should unpack them like so:
 
 =head3 Method matches
 
-  sub (GET ...) {
+  sub (GET) {
 
 A match specification beginning with a capital letter matches HTTP requests
 with that request method.
