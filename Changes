@@ -1,5 +1,6 @@
 Change log for Web::Simple
 
+  - plackup support, as_psgi_app method
   - Fix SYNOPSIS
 
 0.001 - Tue Nov 24 2009 21:54 UTC
