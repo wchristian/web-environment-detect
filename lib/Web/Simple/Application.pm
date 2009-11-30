@@ -171,7 +171,7 @@ sub _build_dispatcher_from_spec {
   my $proto = prototype $spec;
   my $parser = $class->_build_dispatch_parser;
   my $matcher = (
-    length($proto)
+    defined($proto) && length($proto)
       ? $parser->parse_dispatch_specification($proto)
       : undef
   );
