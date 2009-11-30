@@ -115,16 +115,6 @@ ok(
 }
 
 {
-   my $combi = $dp->parse_dispatch_specification('?foo=');
-
-   is_deeply(
-     [ $combi->({ PATH_INFO => '/?foo=' }) ],
-     [ {}, 'one' ],
-     '/post/one parses out one'
-   );
-}
-
-{
    my $or = $dp->parse_dispatch_specification('GET|POST');
 
    foreach my $meth (qw(GET POST)) {
