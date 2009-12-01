@@ -7,11 +7,10 @@ use Test::More qw(no_plan);
 
   sub foo {
     use CSS::Declare;
-    eval "color 'red'";
-    [
+    return (
        '*' => [ color 'red' ],
        'tr, td' => [ margin '1px' ],
-    ];
+    );
   }
 }
 
