@@ -4,7 +4,6 @@ use Test::More qw(no_plan);
 {
 
   package Foo;
-
   sub foo {
     use CSS::Declare;
     return (
@@ -20,5 +19,5 @@ is(
   'Basic CSS::Declare usage'
 );
 
-ok(!eval "color 'red'", 'Death on use of unimported tag');
+ok(!Foo->can('color'), 'Death on use of unimported tag');
 
