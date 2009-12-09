@@ -3,6 +3,6 @@ use warnings FATAL => 'all';
 use inc::Module::Install 0.91;
 
 all_from 'lib/Web/Simple.pm';
-requires 'Perl6::Gather';
+requires 'Syntax::Keyword::Gather';
 
 WriteAll;

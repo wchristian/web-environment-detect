@@ -3,7 +3,7 @@ package CSS::Declare;
 use strict;
 use warnings;
 
-use Perl6::Gather;
+use Syntax::Keyword::Gather;
 
 my $IN_SCOPE = 0;
 
