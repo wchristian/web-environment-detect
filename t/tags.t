@@ -31,12 +31,12 @@ use Test::More qw(no_plan);
     <woo ent="$ent">;
   }
 
-sub flaax {
-  use XML::Tags qw(woo);
-  my $data = "one&two<three>four";
-  <woo>,  $data, </woo>,
-  <woo>, \$data, </woo>;
-}
+  sub flaax {
+    use XML::Tags qw(woo);
+    my $data = "one&two<three>four";
+    <woo>,  $data, </woo>,
+    <woo>, \$data, </woo>;
+  }
 
   sub globbery {
     <t/globbery/*>;
