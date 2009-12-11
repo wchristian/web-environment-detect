@@ -31,6 +31,13 @@ use Test::More qw(no_plan);
     <woo ent="$ent">;
   }
 
+sub flaax {
+  use XML::Tags qw(woo);
+  my $data = "one&two<three>four";
+  <woo>,  $data, </woo>,
+  <woo>, \$data, </woo>;
+}
+
   sub globbery {
     <t/globbery/*>;
   }
@@ -60,6 +67,12 @@ is(
   join('', XML::Tags::to_xml_string Foo::fleem),
   '<woo ent="one&amp;two">',
   'Escaping ok'
+);
+
+is(
+  join('', XML::Tags::to_xml_string Foo::flaax),
+  '<woo>one&amp;two&lt;three&gt;four</woo><woo>one&two<three>four</woo>',
+  'Escaping user data ok'
 );
 
 is(
