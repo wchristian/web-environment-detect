@@ -38,6 +38,11 @@ use Test::More qw(no_plan);
     <woo>, \$data, </woo>;
   }
 
+  sub PI {
+    use XML::Tags;
+    <?xml version="1.0" encoding="UTF-8"?>;
+  }
+
   sub globbery {
     <t/globbery/*>;
   }
@@ -73,6 +78,12 @@ is(
   join('', XML::Tags::to_xml_string Foo::flaax),
   '<woo>one&amp;two&lt;three&gt;four</woo><woo>one&two<three>four</woo>',
   'Escaping user data ok'
+);
+
+is(
+  join('', XML::Tags::to_xml_string Foo::PI),
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  'XML processing instruction'
 );
 
 is(
