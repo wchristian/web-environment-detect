@@ -43,6 +43,11 @@ use Test::More qw(no_plan);
     <?xml version="1.0" encoding="UTF-8"?>;
   }
 
+  sub DTD {
+    use HTML::Tags;
+    <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+  }
+
   sub globbery {
     <t/globbery/*>;
   }
@@ -84,6 +89,12 @@ is(
   join('', XML::Tags::to_xml_string Foo::PI),
   '<?xml version="1.0" encoding="UTF-8"?>',
   'XML processing instruction'
+);
+
+is(
+  join('', HTML::Tags::to_html_string Foo::DTD),
+  '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">',
+  'DTD ok'
 );
 
 is(
