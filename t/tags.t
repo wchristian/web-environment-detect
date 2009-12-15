@@ -27,7 +27,7 @@ use Test::More qw(no_plan);
 
   sub fleem {
     use XML::Tags qw(woo);
-    my $ent = "one&two";
+    my $ent = 'one&two<three>"four';
     <woo ent="$ent">;
   }
 
@@ -75,7 +75,7 @@ is(
 
 is(
   join('', XML::Tags::to_xml_string Foo::fleem),
-  '<woo ent="one&amp;two">',
+  '<woo ent="one&amp;two&lt;three&gt;&quot;four">',
   'Escaping ok'
 );
 
