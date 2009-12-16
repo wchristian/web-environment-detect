@@ -44,6 +44,11 @@ use Test::More qw(no_plan);
     <woo>, \$data, </woo>;
   }
 
+  sub HTML_comment {
+    use HTML::Tags;
+    <!-- this is a comment -->;
+  }
+
   sub PI {
     use XML::Tags;
     <?xml version="1.0" encoding="UTF-8"?>;
@@ -84,6 +89,12 @@ is(
   '<link href="#self" rel="me" />' .
   '<table><tr><td>x<sub>1</sub></td></tr></table>',
   'Conflicting HTML tags ok'
+);
+
+is(
+  join('', XML::Tags::to_xml_string Foo::HTML_comment),
+  '<!-- this is a comment -->',
+  'HTML comment ok'
 );
 
 is(
