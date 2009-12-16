@@ -25,6 +25,12 @@ use Test::More qw(no_plan);
     <html>, <body id="spoon">, "YAY", </body>, </html>;
   }
 
+  sub xquux {
+    use HTML::Tags;
+    <link href="#self" rel="me" />,
+    <table>,<tr>,<td>,'x',<sub>,1,</sub>,</td>,</tr>,</table>;
+  }
+
   sub fleem {
     use XML::Tags qw(woo);
     my $ent = 'one&two<three>"four';
@@ -71,6 +77,13 @@ is(
   join('', HTML::Tags::to_html_string Foo::quux),
   '<html><body id="spoon">YAY</body></html>',
   'HTML tags ok'
+);
+
+is(
+  join('', HTML::Tags::to_html_string Foo::xquux),
+  '<link href="#self" rel="me" />' .
+  '<table><tr><td>x<sub>1</sub></td></tr></table>',
+  'Conflicting HTML tags ok'
 );
 
 is(
