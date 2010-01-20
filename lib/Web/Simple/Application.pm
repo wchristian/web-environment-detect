@@ -61,7 +61,25 @@ use warnings FATAL => 'all';
 sub new {
   my ($class, $data) = @_;
   my $config = { $class->_default_config, %{($data||{})->{config}||{}} };
-  bless({ config => $config }, $class);
+  my $new = bless({ config => $config }, $class);
+  $new->BUILDALL($data);
+  $new;
+}
+
+sub BUILDALL {
+  my ($self, $data) = @_;
+  my $targ = ref($self);
+  my @targ;
+  while ($targ->isa(__PACKAGE__) and $targ ne __PACKAGE__) {
+    push(@targ, "${targ}::BUILD")
+      if do { no strict 'refs'; defined *{"${targ}::BUILD"}{CODE} };
+    my @targ_isa = do { no strict 'refs'; @{"${targ}::ISA"} };
+    die "${targ} uses Multiple Inheritance: ISA is: ".join ', ', @targ_isa
+      if @targ_isa > 1;
+    $targ = $targ_isa[0];
+  }
+  $self->$_($data) for reverse @targ;
+  return;
 }
 
 sub _setup_default_config {
