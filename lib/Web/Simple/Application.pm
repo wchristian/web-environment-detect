@@ -243,15 +243,20 @@ sub _run_with_self {
 sub run_if_script {
   # ->as_psgi_app is true for require() but also works for plackup
   return $_[0]->as_psgi_app if caller(1);
-  my $class = shift;
-  my $self = $class->new;
+  my $self = ref($_[0]) ? $_[0] : $_[0]->new;
   $self->run(@_);
 }
 
 sub _run_cgi {
   my $self = shift;
-  require Web::Simple::HackedPlack;
+  require Plack::Server::CGI;
   Plack::Server::CGI->run($self->as_psgi_app);
+}
+
+sub _run_fcgi {
+  my $self = shift;
+  require Plack::Server::FCGI;
+  Plack::Server::FCGI->run($self->as_psgi_app);
 }
 
 sub as_psgi_app {
@@ -261,20 +266,21 @@ sub as_psgi_app {
 
 sub run {
   my $self = shift;
-  if ($ENV{GATEWAY_INTERFACE}) {
+  if ($ENV{PHP_FCGI_CHILDREN} || $ENV{FCGI_ROLE} || $ENV{FCGI_SOCKET_PATH}) {
+    return $self->_run_fcgi;
+  } elsif ($ENV{GATEWAY_INTERFACE}) {
     return $self->_run_cgi;
   }
   my $path = shift(@ARGV) or die "No path passed - use $0 / for root";
 
-  require HTTP::Request::AsCGI;
   require HTTP::Request::Common;
+  require Plack::Test;
   local *GET = \&HTTP::Request::Common::GET;
 
   my $request = GET($path);
-  my $c = HTTP::Request::AsCGI->new($request)->setup;
-  $self->_run_cgi;
-  $c->restore;
-  print $c->response->as_string;
+  my $response;
+  Plack::Test::test_psgi($self->as_psgi_app, sub { $response = shift->($request) });
+  print $response->as_string;
 }
 
 1;
