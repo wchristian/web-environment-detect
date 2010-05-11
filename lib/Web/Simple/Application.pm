@@ -27,7 +27,7 @@ use warnings FATAL => 'all';
     my ($self, $env, @args) = @_;
     my $next = $self->_has_match ? $self->next : undef;
     if (my ($env_delta, @match) = $self->_match_against($env)) {
-      if (my ($result) = $self->_execute_with(@args, @match)) {
+      if (my ($result) = $self->_execute_with(@args, @match, $env)) {
         if ($self->_is_dispatcher($result)) {
           $next = $result->set_next($next);
           $env = { %$env, %$env_delta };
@@ -191,7 +191,7 @@ sub _build_dispatcher_from_spec {
   my $matcher = (
     defined($proto) && length($proto)
       ? $parser->parse_dispatch_specification($proto)
-      : undef
+      : sub { ({}, $_[1]) }
   );
   return $class->_build_dispatcher({
     match => $matcher,

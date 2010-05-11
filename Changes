@@ -1,6 +1,6 @@
 Change log for Web::Simple
 
-
+  - Experimentally use $_[ENV] for the PSGI env
   - Add CSS::Declare
   - Add more tags to HTML::Tags
 

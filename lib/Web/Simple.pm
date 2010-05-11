@@ -45,6 +45,7 @@ sub _export_into {
     *{"${app_package}::default_config"} = sub {
       $app_package->_setup_default_config(@_);
     };
+    *{"${app_package}::ENV"} = sub () { -1 };
     *{"${app_package}::self"} = \${"${app_package}::self"};
     require Web::Simple::Application;
     unshift(@{"${app_package}::ISA"}, 'Web::Simple::Application');
