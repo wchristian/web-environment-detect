@@ -490,6 +490,16 @@ from subroutine prototypes, so this is equivalent to
 
   sub (GET+/user/*) {
 
+=head3 Accessing the PSGI env hash
+
+To gain the benefit of using some middleware, specifically
+Plack::Middleware::Session access to the ENV hash is needed. This is provided
+in arguments to the dispatched handler. You can access this hash with the
+exported +ENV constant.
+
+    sub (GET + /foo + ?some_param=) {
+        my($self, $some_param, $env) = @_[0, 1, +ENV];
+
 =head1 EXPORTED SUBROUTINES
 
 =head2 default_config
