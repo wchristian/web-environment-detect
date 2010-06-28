@@ -4,7 +4,7 @@ use strict;
 use warnings FATAL => 'all';
 use 5.008;
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 sub setup_all_strictures {
   strict->import;
@@ -495,10 +495,10 @@ from subroutine prototypes, so this is equivalent to
 To gain the benefit of using some middleware, specifically
 Plack::Middleware::Session access to the ENV hash is needed. This is provided
 in arguments to the dispatched handler. You can access this hash with the
-exported +ENV constant.
+exported +PSGI_ENV constant.
 
     sub (GET + /foo + ?some_param=) {
-        my($self, $some_param, $env) = @_[0, 1, +ENV];
+        my($self, $some_param, $env) = @_[0, 1, +PSGI_ENV];
 
 =head1 EXPORTED SUBROUTINES
 
