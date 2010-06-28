@@ -12,7 +12,7 @@ use Test::More (
   package EnvTest;
   dispatch {
     sub (GET) {
-      my $env = @_[ENV];
+      my $env = @_[PSGI_ENV];
       [ 200,
         [ "Content-type" => "text/plain" ],
         [ 'foo' ]
@@ -33,4 +33,4 @@ sub run_request {
   return $c->response;
 }
 
-run_request(GET 'http://localhost/');
+ok run_request(GET 'http://localhost/')->is_success;
