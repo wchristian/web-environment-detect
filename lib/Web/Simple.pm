@@ -184,23 +184,23 @@ is encountered in other code.
    # matches: GET /user/1.htm?show_details=1
    #          GET /user/1.htm
    sub (GET + /user/* + ?show_details~ + .htm|.html|.xhtml) {
-     shift; my ($user_id, $show_details) = @_;
+     my ($self, $user_id, $show_details) = @_;
      ...
    },
    # matches: POST /user?username=frew
    #          POST /user?username=mst&first_name=matt&last_name=trout
    sub (POST + /user + ?username=&*) {
-      shift; my ($username, $misc_params) = @_;
+      my ($self, $username, $misc_params) = @_;
      ...
    },
    # matches: DELETE /user/1/friend/2
    sub (DELETE + /user/*/friend/*) {
-     shift; my ($user_id, $friend_id) = @_;
+     my ($self, $user_id, $friend_id) = @_;
      ...
    },
    # matches: PUT /user/1?first_name=Matt&last_name=Trout
    sub (PUT + /user/* + ?first_name~&last_name~) {
-     shift; my ($user_id, $first_name, $last_name) = @_;
+     my ($self, $user_id, $first_name, $last_name) = @_;
      ...
    },
    sub (/user/*/...) {
@@ -214,7 +214,7 @@ is encountered in other code.
             },
             # matches: DELETE /user/1/role/1
             sub (DELETE + /role/*) {
-              my $role_id = shift;
+              my $role_id = $_[1];
               ...
             },
          ];
