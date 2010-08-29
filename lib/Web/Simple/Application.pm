@@ -167,14 +167,14 @@ sub _construct_subdispatch {
     my $chain = $class->_build_dispatch_chain(@res);
     return $class->_build_dispatcher({
       call => sub {
-        my ($d, $self, $env) = (shift, shift, shift);
+        my ($d, $self, $env) = (shift, shift, shift); pop; # lose trailing $env
         return $chain->dispatch($env, $self, @_);
       }
     });
   });
   return $class->_build_dispatcher({
     call => sub {
-      my ($d, $self, $env) = (shift, shift, shift);
+      my ($d, $self, $env) = (shift, shift, shift); pop; # lose trailing $env
       my @sub = $disp->dispatch($env, $self, @_);
       return @sub if @sub;
       return unless (my $next = $d->next);
