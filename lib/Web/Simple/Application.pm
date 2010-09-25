@@ -271,7 +271,11 @@ sub run {
   } elsif ($ENV{GATEWAY_INTERFACE}) {
     return $self->_run_cgi;
   }
-  my $path = shift(@ARGV) or die "No path passed - use $0 / for root";
+  unless (@ARGV && $ARGV[0] =~ m{^/}) {
+    return $self->_run_cli;
+  }
+
+  my $path = shift @ARGV;
 
   require HTTP::Request::Common;
   require Plack::Test;
@@ -281,6 +285,18 @@ sub run {
   my $response;
   Plack::Test::test_psgi($self->as_psgi_app, sub { $response = shift->($request) });
   print $response->as_string;
+}
+
+sub _run_cli {
+  my $self = shift;
+  die $self->_cli_usage;
+}
+
+sub _cli_usage {
+  "To run this script in CGI test mode, pass a URL path beginning with /:\n".
+  "\n".
+  "  $0 /some/path\n".
+  "  $0 /\n"
 }
 
 1;
