@@ -260,8 +260,8 @@ sub _run_fcgi {
 }
 
 sub as_psgi_app {
-  my $self = shift;
-  ref($self) ? sub { $self->_dispatch(@_) } : sub { $self->new->_dispatch(@_) }
+  my $self = ref($_[0]) ? $_[0] : $_[0]->new;
+  sub { $self->_dispatch(@_) };
 }
 
 sub run {
