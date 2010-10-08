@@ -72,7 +72,10 @@ sub BUILDALL {
   my @targ;
   while ($targ->isa(__PACKAGE__) and $targ ne __PACKAGE__) {
     push(@targ, "${targ}::BUILD")
-      if do { no strict 'refs'; defined *{"${targ}::BUILD"}{CODE} };
+      if do {
+           no strict 'refs'; no warnings 'once';
+           defined *{"${targ}::BUILD"}{CODE}
+         };
     my @targ_isa = do { no strict 'refs'; @{"${targ}::ISA"} };
     die "${targ} uses Multiple Inheritance: ISA is: ".join ', ', @targ_isa
       if @targ_isa > 1;
