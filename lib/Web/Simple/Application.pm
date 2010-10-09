@@ -275,7 +275,7 @@ sub run {
     return $self->_run_cgi;
   }
   unless (@ARGV && $ARGV[0] =~ m{^/}) {
-    return $self->_run_cli;
+    return $self->_run_cli(@ARGV);
   }
 
   my $path = shift @ARGV;
