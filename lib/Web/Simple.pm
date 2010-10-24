@@ -23,7 +23,7 @@ sub setup_dispatch_strictures {
 sub import {
   setup_dispatch_strictures();
   my ($class, $app_package) = @_;
-  $class->_export_into($app_package);
+  $class->_export_into($app_package||caller);
 }
 
 sub _export_into {
