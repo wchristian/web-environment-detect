@@ -130,8 +130,8 @@ sub _construct_redispatch {
 }
 
 sub _build_dispatch_parser {
-  require Web::Simple::DispatchParser;
-  return Web::Simple::DispatchParser->new;
+  require Web::Dispatch::Parser;
+  return Web::Dispatch::Parser->new;
 }
 
 sub _cannot_call_twice {
@@ -193,7 +193,7 @@ sub _build_dispatcher_from_spec {
   my $parser = $class->_build_dispatch_parser;
   my $matcher = (
     defined($proto) && length($proto)
-      ? $parser->parse_dispatch_specification($proto)
+      ? $parser->parse($proto)
       : sub { ({}, $_[1]) }
   );
   return $class->_build_dispatcher({

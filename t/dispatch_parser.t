@@ -3,12 +3,12 @@ use warnings FATAL => 'all';
 
 use Test::More qw(no_plan);
 
-use Web::Simple::DispatchParser;
+use Web::Dispatch::Parser;
 
-my $dp = Web::Simple::DispatchParser->new;
+my $dp = Web::Dispatch::Parser->new;
 
 {
-   my $get = $dp->parse_dispatch_specification('GET');
+   my $get = $dp->parse('GET');
 
    is_deeply(
      [ $get->({ REQUEST_METHOD => 'GET' }) ],
@@ -24,12 +24,12 @@ my $dp = Web::Simple::DispatchParser->new;
 }
 
 ok(
-  !eval { $dp->parse_dispatch_specification('GET POST'); 1; },
+  !eval { $dp->parse('GET POST'); 1; },
   "Don't yet allow two methods"
 );
 
 {
-   my $html = $dp->parse_dispatch_specification('.html');
+   my $html = $dp->parse('.html');
 
    is_deeply(
      [ $html->({ PATH_INFO => '/foo/bar.html' }) ],
@@ -45,7 +45,7 @@ ok(
 }
 
 {
-   my $any_ext = $dp->parse_dispatch_specification('.*');
+   my $any_ext = $dp->parse('.*');
 
    is_deeply(
      [ $any_ext->({ PATH_INFO => '/foo/bar.html' }) ],
@@ -61,7 +61,7 @@ ok(
 }
 
 {
-   my $slash = $dp->parse_dispatch_specification('/');
+   my $slash = $dp->parse('/');
 
    is_deeply(
      [ $slash->({ PATH_INFO => '/' }) ],
@@ -77,7 +77,7 @@ ok(
 }
 
 {
-   my $post = $dp->parse_dispatch_specification('/post/*');
+   my $post = $dp->parse('/post/*');
 
    is_deeply(
      [ $post->({ PATH_INFO => '/post/one' }) ],
@@ -93,7 +93,7 @@ ok(
 }
 
 {
-   my $combi = $dp->parse_dispatch_specification('GET+/post/*');
+   my $combi = $dp->parse('GET+/post/*');
 
    is_deeply(
      [ $combi->({ PATH_INFO => '/post/one', REQUEST_METHOD => 'GET' }) ],
@@ -115,7 +115,7 @@ ok(
 }
 
 {
-   my $or = $dp->parse_dispatch_specification('GET|POST');
+   my $or = $dp->parse('GET|POST');
 
    foreach my $meth (qw(GET POST)) {
 
@@ -134,7 +134,7 @@ ok(
 }
 
 {
-   my $or = $dp->parse_dispatch_specification('GET|POST|DELETE');
+   my $or = $dp->parse('GET|POST|DELETE');
 
    foreach my $meth (qw(GET POST DELETE)) {
 
@@ -153,7 +153,7 @@ ok(
 }
 
 {
-   my $nest = $dp->parse_dispatch_specification('(GET+/foo)|POST');
+   my $nest = $dp->parse('(GET+/foo)|POST');
 
    is_deeply(
      [ $nest->({ PATH_INFO => '/foo', REQUEST_METHOD => 'GET' }) ],
@@ -183,7 +183,7 @@ ok(
 {
   local $@;
   ok(
-    !eval { $dp->parse_dispatch_specification('/foo+(GET'); 1 },
+    !eval { $dp->parse('/foo+(GET'); 1 },
     'Death with missing closing )'
   );
   my $err = q{
@@ -199,7 +199,7 @@ ok(
 }
 
 {
-   my $not = $dp->parse_dispatch_specification('!.html+.*');
+   my $not = $dp->parse('!.html+.*');
 
    is_deeply(
      [ $not->({ PATH_INFO => '/foo.xml' }) ],
@@ -221,17 +221,17 @@ ok(
 }
 
 {
-   my $sub = $dp->parse_dispatch_specification('/foo/*/...');
+   my $sub = $dp->parse('/foo/*/...');
 
    is_deeply(
      [ $sub->({ PATH_INFO => '/foo/1/bar' }) ],
-     [ { PATH_INFO => '/bar' }, 1 ],
+     [ { PATH_INFO => '/bar', SCRIPT_NAME => '/foo/1' }, 1 ],
      '/foo/*/... matches /foo/1/bar and strips to /bar'
    );
 
    is_deeply(
      [ $sub->({ PATH_INFO => '/foo/1/' }) ],
-     [ { PATH_INFO => '/' }, 1 ],
+     [ { PATH_INFO => '/', SCRIPT_NAME => '/foo/1' }, 1 ],
      '/foo/*/... matches /foo/1/bar and strips to /'
    );
 
@@ -266,7 +266,7 @@ my %all_multi = (
 );
 
 foreach my $lose ('?foo=','?:foo=','?@foo=','?:@foo=') {
-    my $foo = $dp->parse_dispatch_specification($lose);
+    my $foo = $dp->parse($lose);
 
     is_deeply(
         [ $foo->({ QUERY_STRING => '' }) ],
@@ -303,7 +303,7 @@ foreach my $win (
     [ '?:@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
 ) {
     my ($spec, @res) = @$win;
-    my $match = $dp->parse_dispatch_specification($spec);
+    my $match = $dp->parse($spec);
     #use Data::Dump::Streamer; warn Dump($match);
     is_deeply(
         [ $match->({ QUERY_STRING => $q }) ],
@@ -317,7 +317,7 @@ foreach my $win (
 #
 
 foreach my $lose2 ('/foo/bar/+?foo=','/foo/bar/+?:foo=','/foo/bar/+?@foo=','/foo/bar/+?:@foo=') {
-    my $foo = $dp->parse_dispatch_specification($lose2);
+    my $foo = $dp->parse($lose2);
 
     is_deeply(
         [ $foo->({ PATH_INFO => '/foo/bar/', QUERY_STRING => '' }) ],
@@ -354,7 +354,7 @@ foreach my $win2 (
     [ '/foo/bar/+?:@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
 ) {
     my ($spec, @res) = @$win2;
-    my $match = $dp->parse_dispatch_specification($spec);
+    my $match = $dp->parse($spec);
     # use Data::Dump::Streamer; warn Dump($match);
     is_deeply(
         [ $match->({ PATH_INFO => '/foo/bar/', QUERY_STRING => $q }) ],
@@ -368,7 +368,7 @@ foreach my $win2 (
 #
 
 foreach my $lose3 ('/foo/bar+?foo=','/foo/bar+?:foo=','/foo/bar+?@foo=','/foo/bar+?:@foo=') {
-    my $foo = $dp->parse_dispatch_specification($lose3);
+    my $foo = $dp->parse($lose3);
 
     is_deeply(
         [ $foo->({ PATH_INFO => '/foo/bar', QUERY_STRING => '' }) ],
@@ -405,7 +405,7 @@ foreach my $win3 (
     [ '/foo/bar+?:@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
 ) {
     my ($spec, @res) = @$win3;
-    my $match = $dp->parse_dispatch_specification($spec);
+    my $match = $dp->parse($spec);
     # use Data::Dump::Streamer; warn Dump($match);
     is_deeply(
         [ $match->({ PATH_INFO => '/foo/bar', QUERY_STRING => $q }) ],

@@ -1,20 +1,23 @@
-package Web::Simple::DispatchParser;
-
-use strict;
-use warnings FATAL => 'all';
+package Web::Dispatch::Parser;
 
 sub DEBUG () { 0 }
 
 BEGIN {
-  if ($ENV{WEB_SIMPLE_DISPATCHPARSER_DEBUG}) {
+  if ($ENV{WEB_DISPATCH_PARSER_DEBUG}) {
     no warnings 'redefine';
     *DEBUG = sub () { 1 }
   }
 }
 
-sub diag { if (DEBUG) { warn $_[0] } }
+use Sub::Quote;
+use Web::Dispatch::Predicates;
+use Moo;
 
-sub new { bless({}, ref($_[0])||$_[0]) }
+has _cache => (
+  is => 'lazy', default => quote_sub q{ {} }
+);
+
+sub diag { if (DEBUG) { warn $_[0] } }
 
 sub _blam {
   my ($self, $error) = @_;
@@ -24,9 +27,9 @@ ${_}
 ${hat} here\n";
 }
 
-sub parse_dispatch_specification {
+sub parse {
   my ($self, $spec) = @_;
-  return $self->_parse_spec($spec);
+  return $self->_cache->{$spec} ||= $self->_parse_spec($spec);
 }
 
 sub _parse_spec {
@@ -50,22 +53,7 @@ sub _parse_spec {
       $self->_blam("No closing ) found for opening (");
     }
     return $match[0] if (@match == 1);
-    return sub {
-      my $env = { %{$_[0]} };
-      my $new_env;
-      my @got;
-      foreach my $match (@match) {
-        if (my @this_got = $match->($env)) {
-          my %change_env = %{shift(@this_got)};
-          @{$env}{keys %change_env} = values %change_env;
-          @{$new_env}{keys %change_env} = values %change_env;
-          push @got, @this_got;
-        } else {
-          return;
-        }
-      }
-      return ($new_env, @got);
-    };
+    return match_and(@match);
   }
 }
 
@@ -85,14 +73,7 @@ sub _parse_spec_combinator {
           last PARSE if (pos == length);
           last PARSE unless /\G\|/gc; # give up when next thing isn't |
         } until (pos == length) }; # accept trailing whitespace
-        return sub {
-          foreach my $try (@match) {
-            if (my @ret = $try->(@_)) {
-              return @ret;
-            }
-          }
-          return;
-        };
+        return match_or(@match);
       };
   }
   return;
@@ -146,7 +127,7 @@ sub _parse_spec_section {
 
 sub _http_method_match {
   my ($self, $str, $method) = @_;
-  sub { shift->{REQUEST_METHOD} eq $method ? {} : () };
+  match_method($method);
 }
 
 sub _url_path_match {
@@ -163,22 +144,12 @@ sub _url_path_match {
       push @path, $self->_url_path_segment_match($_)
         or $self->_blam("Couldn't parse path match segment");
     }
-    my $re = '^()'.join('/','',@path).($full_path ? '$' : '(/.*)$');
+    my $re = '^('.join('/','',@path).')'.($full_path ? '$' : '(/.*)$');
     $re = qr/$re/;
     if ($full_path) {
-      return sub {
-        if (my @cap = (shift->{PATH_INFO} =~ /$re/)) {
-          $cap[0] = {}; return @cap;
-        }
-        return ();
-      };
+      return match_path($re);
     }
-    return sub {
-      if (my @cap = (shift->{PATH_INFO} =~ /$re/)) {
-        $cap[0] = { PATH_INFO => pop(@cap) }; return @cap;
-      }
-      return ();
-    };
+    return match_path_strip($re);
   }
   return;
 }
