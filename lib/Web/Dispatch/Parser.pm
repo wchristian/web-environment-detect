@@ -144,7 +144,9 @@ sub _url_path_match {
       push @path, $self->_url_path_segment_match($_)
         or $self->_blam("Couldn't parse path match segment");
     }
-    !$end and length and $_ .= '(?:\.\w+)?' for $path[-1];
+    if (@path && !$end) {
+      length and $_ .= '(?:\.\w+)?' for $path[-1];
+    }
     my $re = '^('.join('/','',@path).')'.$end.'$';
     $re = qr/$re/;
     if ($end) {
@@ -170,7 +172,7 @@ sub _url_path_segment_match {
       return '(.*?[^/])';
     # * -> capture path part
     /\G\*/gc and
-      return '([^/]+)';
+      return '([^/]+?)';
   }
   return ();
 }

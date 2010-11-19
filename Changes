@@ -1,5 +1,6 @@
 Change log for Web::Simple
 
+  - Factor dispatcher code out into Web::Dispatch
   - Support 'use Web::Simple;' to default to current package
 
 0.004 - Thu Jul 08 2010 22:08 UTC

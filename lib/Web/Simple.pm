@@ -31,16 +31,13 @@ sub _export_into {
   {
     no strict 'refs';
     *{"${app_package}::dispatch"} = sub (&) {
-      $app_package->_setup_dispatcher([ $_[0]->() ]);
+      $app_package->_setup_dispatcher($_[0]);
     };
     *{"${app_package}::response_filter"} = sub (&) {
       $app_package->_construct_response_filter($_[0]);
     };
     *{"${app_package}::redispatch_to"} = sub {
       $app_package->_construct_redispatch($_[0]);
-    };
-    *{"${app_package}::subdispatch"} = sub ($) {
-      $app_package->_construct_subdispatch($_[0]);
     };
     *{"${app_package}::default_config"} = sub {
       $app_package->_setup_default_config(@_);

@@ -14,12 +14,12 @@ sub match_and {
     my @got;
     foreach my $match (@match) {
       if (my @this_got = $match->($my_env)) {
-	my %change_env = %{shift(@this_got)};
-	@{$my_env}{keys %change_env} = values %change_env;
-	@{$new_env}{keys %change_env} = values %change_env;
-	push @got, @this_got;
+        my %change_env = %{shift(@this_got)};
+        @{$my_env}{keys %change_env} = values %change_env;
+        @{$new_env}{keys %change_env} = values %change_env;
+        push @got, @this_got;
       } else {
-	return;
+        return;
       }
     }
     return ($new_env, @got);
@@ -63,8 +63,8 @@ sub match_path_strip {
     my ($env) = @_;
     if (my @cap = ($env->{PATH_INFO} =~ /$re/)) {
       $cap[0] = {
-	SCRIPT_NAME => ($env->{SCRIPT_NAME}||'').$cap[0],
-	PATH_INFO => pop(@cap),
+        SCRIPT_NAME => ($env->{SCRIPT_NAME}||'').$cap[0],
+        PATH_INFO => pop(@cap),
       };
       return @cap;
     }
