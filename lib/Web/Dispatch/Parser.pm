@@ -134,22 +134,24 @@ sub _url_path_match {
   my ($self) = @_;
   for ($_[1]) {
     my @path;
-    my $full_path = '$';
+    my $end = '';
     PATH: while (/\G\//gc) {
       /\G\.\.\./gc
         and do {
-          $full_path = '';
+          $end = '(/.*)';
           last PATH;
         };
       push @path, $self->_url_path_segment_match($_)
         or $self->_blam("Couldn't parse path match segment");
     }
-    my $re = '^('.join('/','',@path).')'.($full_path ? '$' : '(/.*)$');
+    !$end and length and $_ .= '(?:\.\w+)?' for $path[-1];
+    my $re = '^('.join('/','',@path).')'.$end.'$';
     $re = qr/$re/;
-    if ($full_path) {
+    if ($end) {
+      return match_path_strip($re);
+    } else {
       return match_path($re);
     }
-    return match_path_strip($re);
   }
   return;
 }
@@ -159,7 +161,7 @@ sub _url_path_segment_match {
   for ($_[1]) {
     # trailing / -> require / on end of URL
     /\G(?:(?=[+|\)])|$)/gc and
-      return '$';
+      return '';
     # word chars only -> exact path part match
     /\G(\w+)/gc and
       return "\Q$1";
