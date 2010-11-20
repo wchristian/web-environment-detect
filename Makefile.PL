@@ -6,5 +6,6 @@ all_from 'lib/Web/Simple.pm';
 requires 'Syntax::Keyword::Gather';
 requires 'Plack';
 requires 'Moo';
+requires 'warnings::illegalproto';
 
 WriteAll;

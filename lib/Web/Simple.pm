@@ -1,29 +1,16 @@
 package Web::Simple;
 
-use strict;
-use warnings FATAL => 'all';
+use strictures 1;
 use 5.008;
+use warnings::illegalproto ();
 
 our $VERSION = '0.004';
 
-sub setup_all_strictures {
-  strict->import;
-  warnings->import(FATAL => 'all');
-}
-
-sub setup_dispatch_strictures {
-  setup_all_strictures();
-  warnings->unimport('syntax');
-  warnings->import(FATAL => qw(
-    ambiguous bareword digit parenthesis precedence printf
-    prototype qw reserved semicolon
-  ));
-}
-
 sub import {
-  setup_dispatch_strictures();
   my ($class, $app_package) = @_;
   $class->_export_into($app_package||caller);
+  eval "package $class; use Moo;";
+  warnings::illegalproto->unimport;
 }
 
 sub _export_into {

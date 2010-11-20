@@ -1,34 +1,13 @@
 package Web::Simple::Application;
 
-use strict;
-use warnings FATAL => 'all';
+use Moo;
 
-sub new {
-  my ($class, $data) = @_;
-  my $config = { $class->_default_config, %{($data||{})->{config}||{}} };
-  my $new = bless({ config => $config }, $class);
-  $new->BUILDALL($data);
-  $new;
-}
-
-sub BUILDALL {
-  my ($self, $data) = @_;
-  my $targ = ref($self);
-  my @targ;
-  while ($targ->isa(__PACKAGE__) and $targ ne __PACKAGE__) {
-    push(@targ, "${targ}::BUILD")
-      if do {
-           no strict 'refs'; no warnings 'once';
-           defined *{"${targ}::BUILD"}{CODE}
-         };
-    my @targ_isa = do { no strict 'refs'; @{"${targ}::ISA"} };
-    die "${targ} uses Multiple Inheritance: ISA is: ".join ', ', @targ_isa
-      if @targ_isa > 1;
-    $targ = $targ_isa[0];
-  }
-  $self->$_($data) for reverse @targ;
-  return;
-}
+has 'config' => (is => 'ro', trigger => sub {
+  my ($self, $value) = @_;
+  my %default = $self->_default_config;
+  my @not = grep !exists $value->{$_}, keys %default;
+  @{$value}{@not} = @default{@not};
+});
 
 sub _setup_default_config {
   my $class = shift;
@@ -46,10 +25,6 @@ sub _setup_default_config {
 }
 
 sub _default_config { () }
-
-sub config {
-  shift->{config};
-}
 
 sub _construct_response_filter {
   my ($class, $code) = @_;
