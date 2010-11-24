@@ -527,12 +527,21 @@ subdispatch fails.
 dispatch {} has gone away - instead, you write:
 
   sub dispatch_request {
+    my $self = shift;
     sub (GET /foo/) { ... },
     ...
   }
 
 Note that this method is still -returning- the dispatch code - just like
 dispatch did.
+
+Also note that you need the 'my $self = shift' since the magic $self
+variable went away.
+
+=item * the magic $self variable went away.
+
+Just add 'my $self = shift;' while writing your 'sub dispatch_request {'
+like a normal perl method.
 
 =item * subdispatch deleted - all dispatchers can now subdispatch
 
