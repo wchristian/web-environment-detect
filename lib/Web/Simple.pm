@@ -9,7 +9,8 @@ our $VERSION = '0.004';
 sub import {
   my ($class, $app_package) = @_;
   $class->_export_into($app_package||caller);
-  eval "package $class; use Moo;";
+  eval "package $class; use Web::Dispatch::Wrapper; use Moo;";
+  strictures->import;
   warnings::illegalproto->unimport;
 }
 
@@ -17,20 +18,7 @@ sub _export_into {
   my ($class, $app_package) = @_;
   {
     no strict 'refs';
-    *{"${app_package}::dispatch"} = sub (&) {
-      $app_package->_setup_dispatcher($_[0]);
-    };
-    *{"${app_package}::response_filter"} = sub (&) {
-      $app_package->_construct_response_filter($_[0]);
-    };
-    *{"${app_package}::redispatch_to"} = sub {
-      $app_package->_construct_redispatch($_[0]);
-    };
-    *{"${app_package}::default_config"} = sub {
-      $app_package->_setup_default_config(@_);
-    };
     *{"${app_package}::PSGI_ENV"} = sub () { -1 };
-    *{"${app_package}::self"} = \${"${app_package}::self"};
     require Web::Simple::Application;
     unshift(@{"${app_package}::ISA"}, 'Web::Simple::Application');
   }
@@ -65,14 +53,14 @@ change things at all. Not yet. Sorry.
   {
     package HelloWorld;
 
-    dispatch {
+    sub dispatch_request {
       sub (GET) {
         [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
       },
       sub () {
         [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
       }
-    };
+    }
   }
 
   HelloWorld->run_if_script;
@@ -123,32 +111,19 @@ that you did 'use Web::Simple' in, then your application will die. This is,
 so far, considered a feature.
 
 Calling the import also makes NameOfApplication isa Web::Simple::Application
-- i.e. does the equivalent of
+and sets your app class up as a L<Moo> class- i.e. does the equivalent of
 
   {
     package NameOfApplication;
-    use base qw(Web::Simple::Application);
+    use Moo;
+    extends 'Web::Simple::Application';
   }
 
-It also exports the following subroutines:
-
-  default_config(
-    key => 'value',
-    ...
-  );
-
-  dispatch { sub (...) { ... }, ... };
+It also exports the following subroutines for use in dispatchers:
 
   response_filter { ... };
 
   redispatch_to '/somewhere';
-
-  subdispatch sub (...) { ... }
-
-and creates a $self global variable in your application package, so you can
-use $self in dispatch subs without violating strict (Web::Simple::Application
-arranges for dispatch subroutines to have the correct $self in scope when
-this happens).
 
 Finally, import sets
 
@@ -164,7 +139,7 @@ is encountered in other code.
 
 =head2 Examples
 
- dispatch {
+ sub dispatch_request {
    # matches: GET /user/1.htm?show_details=1
    #          GET /user/1.htm
    sub (GET + /user/* + ?show_details~ + .htm|.html|.xhtml) {
@@ -188,25 +163,22 @@ is encountered in other code.
      ...
    },
    sub (/user/*/...) {
-      my $user_id = $_[1];
-      subdispatch sub {
-         [
-            # matches: PUT /user/1/role/1
-            sub (PUT + /role/*) {
-              my $role_id = $_[1];
-              ...
-            },
-            # matches: DELETE /user/1/role/1
-            sub (DELETE + /role/*) {
-              my $role_id = $_[1];
-              ...
-            },
-         ];
-      }
+     my $user_id = $_[1];
+     # matches: PUT /user/1/role/1
+     sub (PUT + /role/*) {
+       my $role_id = $_[1];
+       ...
+     },
+     # matches: DELETE /user/1/role/1
+     sub (DELETE + /role/*) {
+       my $role_id = $_[1];
+       ...
+     },
    },
  }
 
-=head2 Description of the dispatcher object
+=head2 
+Description of the dispatcher object
 
 Web::Simple::Dispatcher objects have three components:
 
@@ -479,78 +451,25 @@ from subroutine prototypes, so this is equivalent to
 To gain the benefit of using some middleware, specifically
 Plack::Middleware::Session access to the ENV hash is needed. This is provided
 in arguments to the dispatched handler. You can access this hash with the
-exported +PSGI_ENV constant.
+exported PSGI_ENV constant.
 
     sub (GET + /foo + ?some_param=) {
-        my($self, $some_param, $env) = @_[0, 1, +PSGI_ENV];
+        my($self, $some_param, $env) = @_[0, 1, PSGI_ENV];
+
+=head2 Dispatcher return values
+
+A dispatcher returns one of:
 
 =head1 EXPORTED SUBROUTINES
-
-=head2 default_config
-
-  default_config(
-    one_key => 'foo',
-    another_key => 'bar',
-  );
-
-  ...
-
-  $self->config->{one_key} # 'foo'
-
-This creates the default configuration for the application, by creating a
-
-  sub _default_config {
-     return (one_key => 'foo', another_key => 'bar');
-  }
-
-in the application namespace when executed. Note that this means that
-you should only run default_config once - calling it a second time will
-cause an exception to be thrown.
-
-=head2 dispatch
-
-  dispatch {
-    sub (GET) {
-      [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
-    },
-    sub () {
-      [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
-    }
-  };
-
-The dispatch subroutine calls NameOfApplication->_setup_dispatcher with
-the return value of the block passed to it, which then creates your Web::Simple
-application's dispatcher from these subs. The prototype of each subroutine
-is expected to be a Web::Simple dispatch specification (see
-L</DISPATCH SPECIFICATIONS> below for more details), and the body of the
-subroutine is the code to execute if the specification matches.
-
-Each dispatcher is given the dispatcher constructed from the next subroutine
-returned as its next dispatcher, except for the final subroutine, which
-is given the return value of NameOfApplication->_build_final_dispatcher
-as its next dispatcher (by default this returns a 500 error response).
-
-See L</DISPATCH STRATEGY> below for details on how the Web::Simple dispatch
-system uses the return values of these subroutines to determine how to
-continue, alter or abort dispatch.
-
-Note that _setup_dispatcher creates a
-
-  sub _dispatcher {
-    return <root dispatcher object here>;
-  }
-
-method in your class so as with default_config, calling dispatch a second time
-will result in an exception.
 
 =head2 response_filter
 
   response_filter {
     # Hide errors from the user because we hates them, preciousss
-    if (ref($_[1]) eq 'ARRAY' && $_[1]->[0] == 500) {
-      $_[1] = [ 200, @{$_[1]}[1..$#{$_[1]}] ];
+    if (ref($_[0]) eq 'ARRAY' && $_[0]->[0] == 500) {
+      $_[0] = [ 200, @{$_[0]}[1..$#{$_[0]}] ];
     }
-    return $_[1];
+    return $_[0];
   };
 
 The response_filter subroutine is designed for use inside dispatch subroutines.
@@ -598,6 +517,44 @@ destructive one like .html the full path will be restored if the
 subdispatch fails.
 
 =head1 CHANGES BETWEEN RELEASES
+
+=head2 Changes between 0.004 and 0.005
+
+=over 4
+
+=item * dispatch {} replaced by declaring a dispatch_request method
+
+dispatch {} has gone away - instead, you write:
+
+  sub dispatch_request {
+    sub (GET /foo/) { ... },
+    ...
+  }
+
+Note that this method is still -returning- the dispatch code - just like
+dispatch did.
+
+=item * subdispatch deleted - all dispatchers can now subdispatch
+
+In earlier releases you needed to write:
+
+  subdispatch sub (/foo/...) {
+    ...
+    [
+      sub (GET /bar/) { ... },
+      ...
+    ]
+  }
+
+As of 0.005, you can instead write simply:
+
+  sub (/foo/...) {
+    ...
+    (
+      sub (GET /bar/) { ... },
+      ...
+    )
+  }
 
 =head2 Changes since Antiquated Perl
 

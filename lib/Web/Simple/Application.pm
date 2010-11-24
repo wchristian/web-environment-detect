@@ -9,88 +9,29 @@ has 'config' => (is => 'ro', trigger => sub {
   @{$value}{@not} = @default{@not};
 });
 
-sub _setup_default_config {
-  my $class = shift;
-  {
-    no strict 'refs';
-    if (${"${class}::_default_config"}{CODE}) {
-      $class->_cannot_call_twice('_setup_default_config', 'default_config');
-    }
-  }
-  my @defaults = (@_, $class->_default_config);
-  {
-    no strict 'refs';
-    *{"${class}::_default_config"} = sub { @defaults };
-  }
-}
+sub default_config { () }
 
-sub _default_config { () }
+has '_dispatcher' => (is => 'lazy');
 
-sub _construct_response_filter {
-  my ($class, $code) = @_;
-  my $self = do { no strict 'refs'; ${"${class}::self"} };
-  require Web::Dispatch::Wrapper;
-  Web::Dispatch::Wrapper->from_code(sub {
-    my @result = $_[1]->($_[0]);
-    if (@result) {
-      $self->_run_with_self($code, @result);
-    } else {
-      @result;
-    }
-  });
-}
-
-sub _construct_redispatch {
-  my ($class, $new_path) = @_;
-  require Web::Dispatch::Wrapper;
-  Web::Dispatch::Wrapper->from_code(sub {
-    $_[1]->({ %{$_[0]}, PATH_INFO => $new_path });
-  });
-}
-
-sub _build_dispatch_parser {
-  require Web::Dispatch::Parser;
-  return Web::Dispatch::Parser->new;
-}
-
-sub _cannot_call_twice {
-  my ($class, $method, $sub) = @_;
-  my $error = "Cannot call ${method} twice for ${class}";
-  if ($sub) {
-    $error .= " - did you call Web::Simple's ${sub} export twice?";
-  }
-  die $error;
-}
-
-sub _setup_dispatcher {
-  my ($class, $dispatcher) = @_;
-  {
-    no strict 'refs';
-    if (${"${class}::_dispatcher"}{CODE}) {
-      $class->_cannot_call_twice('_setup_dispatcher', 'dispatch');
-    }
-  }
-  {
-    no strict 'refs';
-    *{"${class}::dispatch_request"} = $dispatcher;
-  }
+sub _build__dispatcher {
+  my $self = shift;
+  require Web::Dispatch;
+  require Web::Simple::DispatchNode;
+  my $final = $self->_build_final_dispatcher;
+  Web::Dispatch->new(
+    app => sub { $self->dispatch_request(@_), $final },
+    node_class => 'Web::Simple::DispatchNode',
+    node_args => { app_object => $self }
+  );
 }
 
 sub _build_final_dispatcher {
   [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ]
 }
 
-sub _run_with_self {
-  my ($self, $run, @args) = @_;
-  my $class = ref($self);
-  no strict 'refs';
-  local *{"${class}::self"} = \$self;
-  $self->$run(@args);
-}
-
 sub run_if_script {
   # ->as_psgi_app is true for require() but also works for plackup
-  return $_[0]->as_psgi_app if caller(1);
+  return $_[0]->to_psgi_app if caller(1);
   my $self = ref($_[0]) ? $_[0] : $_[0]->new;
   $self->run(@_);
 }
@@ -107,16 +48,9 @@ sub _run_fcgi {
   Plack::Server::FCGI->run($self->as_psgi_app);
 }
 
-sub as_psgi_app {
+sub to_psgi_app {
   my $self = ref($_[0]) ? $_[0] : $_[0]->new;
-  require Web::Dispatch;
-  require Web::Simple::DispatchNode;
-  my $final = $self->_build_final_dispatcher;
-  Web::Dispatch->new(
-    app => sub { $self->dispatch_request(@_), $final },
-    node_class => 'Web::Simple::DispatchNode',
-    node_args => { app_object => $self }
-  )->to_app;
+  $self->_dispatcher->to_app;
 }
 
 sub run {
