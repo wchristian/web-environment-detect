@@ -492,7 +492,7 @@ It creates and returns a special dispatcher that always matches, and instead
 of continuing dispatch re-delegates it to the start of the dispatch process,
 but with the path of the request altered to the supplied URL.
 
-Thus if you receive a POST to '/some/url' and return a redipstch to
+Thus if you receive a POST to '/some/url' and return a redispatch to
 '/other/url', the dispatch behaviour will be exactly as if the same POST
 request had been made to '/other/url' instead.
 
