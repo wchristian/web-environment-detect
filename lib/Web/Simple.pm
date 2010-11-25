@@ -177,77 +177,78 @@ is encountered in other code.
    },
  }
 
-=head2 
-Description of the dispatcher object
+=head2 The dispatch cycle
 
-Web::Simple::Dispatcher objects have three components:
+At the beginning of a request, your app's dispatch_request method is called
+with the PSGI $env as an argument. You can handle the request entirely in
+here and return a PSGI response arrayref if you want:
 
-=over 4
-
-=item * match - an optional test if this dispatcher matches the request
-
-=item * call - a routine to call if this dispatcher matches (or has no match)
-
-=item * next - the next dispatcher to call
-
-=back
-
-When a dispatcher is invoked, it checks its match routine against the
-request environment. The match routine may provide alterations to the
-request as a result of matching, and/or arguments for the call routine.
-
-If no match routine has been provided then Web::Simple treats this as
-a success, and supplies the request environment to the call routine as
-an argument.
-
-Given a successful match, the call routine is now invoked in list context
-with any arguments given to the original dispatch, plus any arguments
-provided by the match result.
-
-If this routine returns (), Web::Simple treats this identically to a failure
-to match.
-
-If this routine returns a Web::Simple::Dispatcher, the environment changes
-are merged into the environment and the new dispatcher's next pointer is
-set to our next pointer.
-
-If this routine returns anything else, that is treated as the end of dispatch
-and the value is returned.
-
-On a failed match, Web::Simple invokes the next dispatcher with the same
-arguments and request environment passed to the current one. On a successful
-match that returned a new dispatcher, Web::Simple invokes the new dispatcher
-with the same arguments but the modified request environment.
-
-=head2 How Web::Simple builds dispatcher objects for you
-
-In the case of the Web::Simple L</dispatch> export the match is constructed
-from the subroutine prototype - i.e.
-
-  sub (<match specification>) {
-    <call code>
+  sub dispatch_request {
+    my ($self, $env) = @_;
+    [ 404, [ 'Content-type' => 'text/plain' ], [ 'Amnesia == fail' ] ]
   }
 
-and the 'next' pointer is populated with the next element of the array,
-expect for the last element, which is given a next that will throw a 500
-error if none of your dispatchers match. If you want to provide something
-else as a default, a routine with no match specification always matches, so -
+However, generally, instead of that, you return a set of dispatch subs:
 
-  sub () {
-    [ 404, [ 'Content-type', 'text/plain' ], [ 'Error: Not Found' ] ]
-  }
-
-will produce a 404 result instead of a 500 by default. You can also override
-the L<Web::Simple::Application/_build_final_dispatcher> method in your app.
-
-Note that the code in the subroutine is executed as a -method- on your
-application object, so if your match specification provides arguments you
-should unpack them like so:
-
-  sub (<match specification>) {
-    my ($self, @args) = @_;
+  sub dispatch_request {
+    my $self = shift;
+    sub (/) { redispatch_to '/index.html' },
+    sub (/user/*) { $self->show_user($_[1]) },
     ...
   }
+
+If you return a subroutine with a prototype, the prototype is treated
+as a match specification - and if the test is passed, the body of the
+sub is called as a method any matched arguments (see below for more details).
+
+You can also return a plain subroutine which will be called with just $env
+- remember that in this case if you need $self you -must- close over it.
+
+If you return a normal object, Web::Simple will simply return it upwards on
+the assumption that a response_filter somewhere will convert it to something
+useful - this allows:
+
+  sub dispatch_request {
+    my $self = shift;
+    sub (.html) { response_filter { $self->render_zoom($_[0]) } },
+    sub (/user/*) { $self->users->get($_[1]) },
+  }
+
+to render a user object to HTML, for example.
+
+However, two types of object are treated specially - a Plack::App object
+will have its ->to_app method called and be used as a dispatcher:
+
+  sub dispatch_request {
+    my $self = shift;
+    sub (/static/...) { Plack::App::File->new(...) },
+    ...
+  }
+
+A Plack::Middleware object will be used as a filter for the rest of the
+dispatch being returned into:
+
+  sub dispatch_request {
+    my $self = shift;
+    ...
+    sub (/admin) { Plack::Middleware::Session->new(...) },
+    ... # dispatchers needing a session go here
+  }
+
+Note that this is for the dispatch being -returned- to, so if you want to
+provide it inline you need to do:
+
+  sub dispatch_request {
+    my $self = shift;
+    ...
+    sub (/admin/...) {
+      sub { Plack::Middleware::Session->new(...) },
+      ... # dispatchers under /admin
+    }
+  }
+
+And that's it - but remember that all this happens recursively - it's
+dispatchers all the way down.
 
 =head2 Web::Simple match specifications
 
@@ -448,17 +449,23 @@ from subroutine prototypes, so this is equivalent to
 
 =head3 Accessing the PSGI env hash
 
-To gain the benefit of using some middleware, specifically
-Plack::Middleware::Session access to the ENV hash is needed. This is provided
-in arguments to the dispatched handler. You can access this hash with the
-exported PSGI_ENV constant.
+In some cases you may wish to get the raw PSGI env hash - to do this,
+you can either use a plain sub -
 
-    sub (GET + /foo + ?some_param=) {
-        my($self, $some_param, $env) = @_[0, 1, PSGI_ENV];
+  sub {
+    my ($env) = @_;
+    ...
+  }
 
-=head2 Dispatcher return values
+or use the PSGI_ENV constant exported to retrieve it:
 
-A dispatcher returns one of:
+  sub (GET + /foo + ?some_param=) {
+    my $param = $_[1];
+    my $env = $_[PSGI_ENV];
+  }
+
+but note that if you're trying to add a middleware, you should simply use
+Web::Simple's direct support for doing so.
 
 =head1 EXPORTED SUBROUTINES
 
@@ -495,26 +502,6 @@ but with the path of the request altered to the supplied URL.
 Thus if you receive a POST to '/some/url' and return a redispatch to
 '/other/url', the dispatch behaviour will be exactly as if the same POST
 request had been made to '/other/url' instead.
-
-=head2 subdispatch
-
-  subdispatch sub (/user/*/) {
-    my $u = $self->user($_[1]);
-    [
-      sub (GET) { $u },
-      sub (DELETE) { $u->delete },
-    ]
-  }
-
-The subdispatch subroutine is designed for use in dispatcher construction.
-
-It creates a dispatcher which, if it matches, treats its return value not
-as a final value but an arrayref of dispatch specifications such as could
-be passed to the dispatch subroutine itself. These are turned into a dispatcher
-which is then invoked. Any changes the match makes to the request are in
-scope for this inner dispatcher only - so if the initial match is a
-destructive one like .html the full path will be restored if the
-subdispatch fails.
 
 =head1 CHANGES BETWEEN RELEASES
 
