@@ -85,17 +85,18 @@ sub post {
 }
 
 sub dispatch_request {
+  my $self = shift;
   sub (GET + /) {
-    $_[0]->redispatch_to('/index.html');
+    redispatch_to '/index.html';
   },
   sub (.html) {
-    response_filter { $_[0]->render_html($_[1]) },
+    response_filter { $self->render_html($_[1]) },
   },
   sub (GET + /index) {
-    $_[0]->post_list
+    $self->post_list
   },
   sub (GET + /*) {
-    $_[0]->post($_[1])
+    $self->post($_[1])
   },
   sub (GET) {
     [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ]

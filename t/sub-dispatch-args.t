@@ -13,19 +13,20 @@ use Test::More (
     package t::Web::Simple::SubDispatchArgs;
 
     sub dispatch_request {
+        my $self = shift;
         sub (/) {
-            $_[0]->show_landing(@_);
+            $self->show_landing(@_);
         },
         sub(/...) {
             sub (GET + /user) {
-                $_[0]->show_users(@_);
+                $self->show_users(@_);
             },
             sub (/user/*) {
                 sub (GET) {
-                    $_[0]->show_user(@_);
+                    $self->show_user(@_);
                 },
                 sub (POST + %:id=&:@roles~) {
-                    $_[0]->process_post(@_);
+                    $self->process_post(@_);
                 }
             },
         }
