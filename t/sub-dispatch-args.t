@@ -14,18 +14,18 @@ use Test::More (
 
     sub dispatch_request {
         sub (/) {
-            $self->show_landing(@_);
+            shift->show_landing(@_);
         },
         sub(/...) {
             sub (GET + /user) {
-                $self->show_users(@_);
+                shift->show_users(@_);
             },
             sub (/user/*) {
                 sub (GET) {
-                    $self->show_user(@_);
+                    shift->show_user(@_);
                 },
                 sub (POST + %:id=&:@roles~) {
-                    $self->process_post(@_);
+                    shift->process_post(@_);
                 }
             },
         }

@@ -30,7 +30,7 @@ sub _build_final_dispatcher {
 }
 
 sub run_if_script {
-  # ->as_psgi_app is true for require() but also works for plackup
+  # ->to_psgi_app is true for require() but also works for plackup
   return $_[0]->to_psgi_app if caller(1);
   my $self = ref($_[0]) ? $_[0] : $_[0]->new;
   $self->run(@_);
@@ -39,13 +39,13 @@ sub run_if_script {
 sub _run_cgi {
   my $self = shift;
   require Plack::Server::CGI;
-  Plack::Server::CGI->run($self->as_psgi_app);
+  Plack::Server::CGI->run($self->to_psgi_app);
 }
 
 sub _run_fcgi {
   my $self = shift;
   require Plack::Server::FCGI;
-  Plack::Server::FCGI->run($self->as_psgi_app);
+  Plack::Server::FCGI->run($self->to_psgi_app);
 }
 
 sub to_psgi_app {
@@ -72,7 +72,7 @@ sub run {
 
   my $request = GET($path);
   my $response;
-  Plack::Test::test_psgi($self->as_psgi_app, sub { $response = shift->($request) });
+  Plack::Test::test_psgi($self->to_psgi_app, sub { $response = shift->($request) });
   print $response->as_string;
 }
 
