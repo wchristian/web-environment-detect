@@ -2,12 +2,19 @@ package Web::Simple::Application;
 
 use Moo;
 
-has 'config' => (is => 'ro', trigger => sub {
-  my ($self, $value) = @_;
-  my %default = $self->_default_config;
-  my @not = grep !exists $value->{$_}, keys %default;
-  @{$value}{@not} = @default{@not};
-});
+has 'config' => (
+  is => 'ro',
+  default => sub {
+    my ($self) = @_;
+    +{ $self->default_config }
+  },
+  trigger => sub {
+    my ($self, $value) = @_;
+    my %default = $self->default_config;
+    my @not = grep !exists $value->{$_}, keys %default;
+    @{$value}{@not} = @default{@not};
+  }
+);
 
 sub default_config { () }
 

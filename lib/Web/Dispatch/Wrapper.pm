@@ -3,23 +3,28 @@ package Web::Dispatch::Wrapper;
 use strictures 1;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(dispatch_wrapper redispatch_to response_filter);
+our @EXPORT = qw(dispatch_wrapper redispatch_to response_filter);
 
 sub dispatch_wrapper (&) {
+  my ($code) = @_;
+  __PACKAGE__->from_code($code);
+}
+
+sub from_code {
   my ($class, $code) = @_;
   bless(\$code, $class);
 }
 
 sub redispatch_to {
-  my ($class, $new_path) = @_;
-  $class->from_code(sub {
+  my ($new_path) = @_;
+  __PACKAGE__->from_code(sub {
     $_[1]->({ %{$_[0]}, PATH_INFO => $new_path });
   });
 }
 
 sub response_filter (&) {
-  my ($class, $code) = @_;
-  $class->from_code(sub {
+  my ($code) = @_;
+  __PACKAGE__->from_code(sub {
     my @result = $_[1]->($_[0]);
     if (@result) {
       $code->(@result);

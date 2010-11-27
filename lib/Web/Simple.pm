@@ -3,13 +3,17 @@ package Web::Simple;
 use strictures 1;
 use 5.008;
 use warnings::illegalproto ();
+use Moo ();
+use Web::Dispatch::Wrapper ();
 
 our $VERSION = '0.004';
 
 sub import {
   my ($class, $app_package) = @_;
-  $class->_export_into($app_package||caller);
-  eval "package $class; use Web::Dispatch::Wrapper; use Moo;";
+  $app_package ||= caller;
+  $class->_export_into($app_package);
+  eval "package $app_package; use Web::Dispatch::Wrapper; use Moo; 1"
+    or die "Failed to setup app package: $@";
   strictures->import;
   warnings::illegalproto->unimport;
 }
