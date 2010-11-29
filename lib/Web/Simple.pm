@@ -77,13 +77,7 @@ you'll get the "Hello world!" string output to your browser. For more complex
 examples and non-CGI deployment, see below. To get help with Web::Simple,
 please connect to the irc.perl.org IRC network and join #web-simple.
 
-=head1 WHY?
-
-Web::Simple was originally written to form part of my Antiquated Perl talk for
-Italian Perl Workshop 2009, but in writing the bloggery example I realised
-that having a bare minimum system for writing web applications that doesn't
-drive me insane was rather nice and decided to spend my attempt at nanowrimo
-for 2009 improving and documenting it to the point where others could use it.
+=head1 DESCRIPTION
 
 The philosophy of Web::Simple is to keep to an absolute bare minimum, for
 everything. It is not designed to be used for large scale applications;
@@ -94,17 +88,13 @@ However, if you have an application that only does a couple of things, and
 want to not have to think about complexities of deployment, then Web::Simple
 might be just the thing for you.
 
-The Antiquated Perl talk can be found at L<http://www.shadowcat.co.uk/archive/conference-video/>.
-
-=head1 DESCRIPTION
-
 The only public interface the Web::Simple module itself provides is an
-import based one -
+import based one:
 
   use Web::Simple 'NameOfApplication';
 
 This imports 'strict' and 'warnings FATAL => "all"' into your code as well,
-so you can skip the usual
+so you can skip the usual:
 
   use strict;
   use warnings;
@@ -593,6 +583,16 @@ to
 should work fine.
 
 =back
+
+=head1 DEVELOPMENT HISTORY
+
+Web::Simple was originally written to form part of my Antiquated Perl talk for
+Italian Perl Workshop 2009, but in writing the bloggery example I realised
+that having a bare minimum system for writing web applications that doesn't
+drive me insane was rather nice and decided to spend my attempt at nanowrimo
+for 2009 improving and documenting it to the point where others could use it.
+
+The Antiquated Perl talk can be found at L<http://www.shadowcat.co.uk/archive/conference-video/>.
 
 =head1 COMMUNITY AND SUPPORT
 
