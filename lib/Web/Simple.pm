@@ -232,22 +232,38 @@ will have its ->to_app method called and be used as a dispatcher:
 A Plack::Middleware object will be used as a filter for the rest of the
 dispatch being returned into:
 
+  ## responds to /admin/track_usage AND /admin/delete_accounts
+
   sub dispatch_request {
     my $self = shift;
-    ...
-    sub (/admin) { Plack::Middleware::Session->new(...) },
-    ... # dispatchers needing a session go here
+    sub (/admin/**) {
+      Plack::Middleware::Session->new(%opts);
+    },
+    sub (/admin/track_usage) {
+      ## something that needs a session
+    },
+    sub (/admin/delete_accounts) {
+      ## something else that needs a session
+    },
   }
 
 Note that this is for the dispatch being -returned- to, so if you want to
 provide it inline you need to do:
 
+  ## ALSO responds to /admin/track_usage AND /admin/delete_accounts
+
   sub dispatch_request {
     my $self = shift;
-    ...
     sub (/admin/...) {
-      sub { Plack::Middleware::Session->new(...) },
-      ... # dispatchers under /admin
+      sub {
+        Plack::Middleware::Session->new(%opts);
+      },
+      sub (/track_usage) {
+        ## something that needs a session
+      },
+      sub (/delete_accounts) {
+        ## something else that needs a session
+      },
     }
   }
 
