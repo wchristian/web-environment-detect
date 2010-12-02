@@ -79,13 +79,13 @@ please connect to the irc.perl.org IRC network and join #web-simple.
 
 =head1 DESCRIPTION
 
-The philosophy of Web::Simple is to keep to an absolute bare minimum, for
+The philosophy of L<Web::Simple> is to keep to an absolute bare minimum, for
 everything. It is not designed to be used for large scale applications;
 the L<Catalyst> web framework already works very nicely for that and is
 a far more mature, well supported piece of software.
 
 However, if you have an application that only does a couple of things, and
-want to not have to think about complexities of deployment, then Web::Simple
+want to not have to think about complexities of deployment, then L<Web::Simple>
 might be just the thing for you.
 
 The only public interface the Web::Simple module itself provides is an
@@ -93,19 +93,24 @@ import based one:
 
   use Web::Simple 'NameOfApplication';
 
-This imports 'strict' and 'warnings FATAL => "all"' into your code as well,
-so you can skip the usual:
+This setups up your package (in this case "NameOfApplication" is your package)
+so that it inherits from L<Web::Simple::Application> and imports L<strictures>,
+as well as installs a C<PSGI_ENV> constant for convenience, as well as some 
+other subroutines.
+
+Importing L<strictures> will automatically make you code use the C<strict> and
+C<warnings> pragma, so you can skip the usual:
 
   use strict;
-  use warnings;
+  use warnings FATAL => 'aa';
 
 provided you 'use Web::Simple' at the top of the file. Note that we turn
 on *fatal* warnings so if you have any warnings at any point from the file
 that you did 'use Web::Simple' in, then your application will die. This is,
 so far, considered a feature.
 
-Calling the import also makes NameOfApplication isa Web::Simple::Application
-and sets your app class up as a L<Moo> class- i.e. does the equivalent of
+When we inherit from L<Web::Simple::Application> we also use <Moo>, which is
+the the equivalent of:
 
   {
     package NameOfApplication;
@@ -130,6 +135,12 @@ so that perl will not attempt to load the application again even if
 is encountered in other code.
 
 =head1 DISPATCH STRATEGY
+
+L<Web::Simple> dispite being straightforward to use, has a powerful system
+for matching all sorts of incoming URLs to one or more subroutines.  These
+subroutines can be simple actions to take for a given URL, or something
+more complicated, including entire L<Plack> applications, L<Plack::Middleware>
+and nested subdispatchers.
 
 =head2 Examples
 
@@ -198,9 +209,9 @@ sub is called as a method any matched arguments (see below for more details).
 You can also return a plain subroutine which will be called with just $env
 - remember that in this case if you need $self you -must- close over it.
 
-If you return a normal object, Web::Simple will simply return it upwards on
-the assumption that a response_filter somewhere will convert it to something
-useful - this allows:
+If you return a normal object, L<Web::Simple> will simply return it upwards on
+the assumption that a response_filter (or some arbitrary L<Plack::Middleware>)
+somewhere will convert it to something useful.  This allows:
 
   sub dispatch_request {
     my $self = shift;
@@ -208,10 +219,20 @@ useful - this allows:
     sub (/user/*) { $self->users->get($_[1]) },
   }
 
-to render a user object to HTML, for example.
+to render a user object to HTML, if there is an incoming URL such as:
+
+  http://myweb.org/user/111.html
+
+This works because as we descend down the dispachers, we first match
+C<sub (.html)>, which adds a C<response_filter> (basically a specialized routine
+that follows the L<Plack::Middleware> specification), and then later we also
+match C<sub (/user/*)> which gets a user and returns that as the response.
+This user object 'bubbles up' through all the wrapping middleware until it hits
+the C<response_filter> we defined, after which the return is converted to a
+true html response.
 
 However, two types of object are treated specially - a Plack::App object
-will have its ->to_app method called and be used as a dispatcher:
+will have its C<->to_app> method called and be used as a dispatcher:
 
   sub dispatch_request {
     my $self = shift;
@@ -258,7 +279,8 @@ provide it inline you need to do:
   }
 
 And that's it - but remember that all this happens recursively - it's
-dispatchers all the way down.
+dispatchers all the way down.  A URL incoming pattern will run all matching
+dispatchers and then hit all added filters or L<Plack::Middleware>.
 
 =head2 Web::Simple match specifications
 
@@ -364,7 +386,12 @@ separated by the & character. The arguments added to the request are
 one per non-:/* parameter (scalar for normal, arrayref for multiple),
 plus if any :/* specs exist a hashref containing those values.
 
-So, to match a page parameter with an optional order_by parameter one
+Please note that if you specify a multiple type parameter match, you are
+ensured of getting an arrayref for the value, EVEN if the current incoming
+request has only one value.  However if a parameter is specified as single
+and multiple values are found, the last one will be used.
+
+For example to match a page parameter with an optional order_by parameter one
 would write:
 
   sub (?page=&order_by~) {
@@ -378,10 +405,7 @@ would write:
 
 to implement paging and ordering against a L<DBIx::Class::ResultSet> object.
 
-Note that if a parameter is specified as single and multiple values are found,
-the last one will be used.
-
-To get all parameters as a hashref of arrayrefs, write:
+Another Example: To get all parameters as a hashref of arrayrefs, write:
 
   sub(?@*) {
     my ($self, $params) = @_;
@@ -400,6 +424,11 @@ You can also mix these, so:
 where $bar is an arrayref (possibly an empty one), and $params contains
 arrayref values for all parameters -not- mentioned and a scalar value for
 the 'coffee' parameter.
+
+Note, in the case where you combine arrayref, single parameter and named
+hashref style, the arrayref and single parameters will appear in C<@_> in the
+order you defined them in the protoype, but all hashrefs will merge into a 
+single C<$params>, as in the example above.
 
 =head3 Combining matches
 
@@ -444,7 +473,7 @@ are not - the latter is equivalent to
 
   sub (GET + (.html|POST) + .html) {
 
-which will never match.
+which will never match!
 
 =head3 Whitespace
 
@@ -512,6 +541,9 @@ but with the path of the request altered to the supplied URL.
 Thus if you receive a POST to '/some/url' and return a redispatch to
 '/other/url', the dispatch behaviour will be exactly as if the same POST
 request had been made to '/other/url' instead.
+
+Note, this is not the same as returning an HTTP 3xx redirect as a response;
+rather it is a much more efficient internal process.  
 
 =head1 CHANGES BETWEEN RELEASES
 
