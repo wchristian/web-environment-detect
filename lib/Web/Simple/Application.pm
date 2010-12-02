@@ -96,3 +96,120 @@ sub _cli_usage {
 }
 
 1;
+
+=head1 NAME
+
+Web::Simple::Application - A base class for your Web-Simple applications
+
+=head1 DESCRIPTION
+
+This is a base class for your L<Web::Simple> application.  You probably don't
+need to construct this class yourself, since L<Web::Simple> does the 'heavy
+lifting' for you in that regards.
+
+=head1 METHODS
+
+This class exposes the follow public methods.
+
+=head2 default_config
+
+Provide configuration information to your application, for example:
+
+  sub default_config {
+    (
+      title => 'Bloggery',
+      posts_dir => $FindBin::Bin.'/posts',
+    );
+  }
+
+Now, C<$self> will have an attribute C<config> which will be set to a HashRef
+containing keys 'title' and 'posts_dir'.
+
+=head2 run_if_script
+
+In the case where you wish to run you L<Web::Simple> based application as a 
+stand alone CGI application, you can simple do:
+
+  ## my_web_simple_app.pl
+  use MyWebSimpleApp::Web;
+  MyWebSimpleApp::Web->run_if_script.
+
+Or (even more simply) just inline the entire application:
+
+  ## my_web_simple_app.pl
+  #!/usr/bin/env perl
+  use Web::Simple 'HelloWorld';
+
+  {
+    package HelloWorld;
+
+    sub dispatch_request {
+      sub (GET) {
+        [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
+      },
+      sub () {
+        [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
+      }
+    }
+  }
+
+  HelloWorld->run_if_script;
+
+=head2 to_psgi_app
+
+Given a L<Web::Simple> application root namespace, return it in a form suitable
+to run in inside a L<Plack> container, or in L<Plack::Builder> or in a C<*.psgi>
+file:
+
+  ## app.psgi
+  use strictures 1;
+  use Plack::Builder;
+  use MyWebSimpleApp::Web;
+
+  builder {
+    ## enable middleware
+    enable 'StackTrace';
+    enable 'Debug';
+
+    ## return application
+    MyWebSimpleApp::Web->to_psgi_app;
+  };
+
+This could be run via C<plackup>, etc.  Please note the L<Plack::Builder> DSL
+is optional, if you are enabling L<Plack::Middleware> internally in your
+L<Web::Simple> application; your app.psgi could be as simple as:
+
+  use MyWebSimpleApp::Web;
+  MyWebSimpleApp::Web->to_psgi_app;
+
+As always, mix and match the pieces you actually need and remember the 
+L<Web::Simple> philosophy of trying to keep it as minimal and simple as possible.
+
+=head2 run
+
+Used for running your application under stand-alone CGI and FCGI modes. Also
+useful for testing:
+
+    my $app = MyWebSimpleApp::Web->new;
+    my $c = HTTP::Request::AsCGI->new(@args)->setup;
+    $app->run;
+
+=head1 AUTHOR
+
+Matt S. Trout <mst@shadowcat.co.uk>
+
+=head1 CONTRIBUTORS
+
+None required yet. Maybe this module is perfect (hahahahaha ...).
+
+=head1 COPYRIGHT
+
+Copyright (c) 2009 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
+as listed above.
+
+=head1 LICENSE
+
+This library is free software and may be distributed under the same terms
+as perl itself.
+
+=cut
