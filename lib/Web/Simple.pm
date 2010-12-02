@@ -50,7 +50,7 @@ change things at all. Not yet. Sorry.
 
 =head1 SYNOPSIS
 
-  #!/usr/bin/perl
+  #!/usr/bin/env perl
 
   use Web::Simple 'HelloWorld';
 
@@ -69,7 +69,7 @@ change things at all. Not yet. Sorry.
 
   HelloWorld->run_if_script;
 
-If you save this file into your cgi-bin as hello-world.cgi and then visit
+If you save this file into your cgi-bin as C<hello-world.cgi> and then visit:
 
   http://my.server.name/cgi-bin/hello-world.cgi/
 
