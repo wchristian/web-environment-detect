@@ -74,12 +74,12 @@ If you save this file into your cgi-bin as C<hello-world.cgi> and then visit:
   http://my.server.name/cgi-bin/hello-world.cgi/
 
 you'll get the "Hello world!" string output to your browser. For more complex
-examples and non-CGI deployment, see below. To get help with Web::Simple,
+examples and non-CGI deployment, see below. To get help with L<Web::Simple>,
 please connect to the irc.perl.org IRC network and join #web-simple.
 
 =head1 DESCRIPTION
 
-The philosophy of L<Web::Simple> is to keep to an absolute bare minimum, for
+The philosophy of L<Web::Simple> is to keep to an absolute bare minimum for
 everything. It is not designed to be used for large scale applications;
 the L<Catalyst> web framework already works very nicely for that and is
 a far more mature, well supported piece of software.
@@ -88,17 +88,17 @@ However, if you have an application that only does a couple of things, and
 want to not have to think about complexities of deployment, then L<Web::Simple>
 might be just the thing for you.
 
-The only public interface the Web::Simple module itself provides is an
-import based one:
+The only public interface the L<Web::Simple> module itself provides is an
+C<import> based one:
 
   use Web::Simple 'NameOfApplication';
 
-This setups up your package (in this case "NameOfApplication" is your package)
+This sets up your package (in this case "NameOfApplication" is your package)
 so that it inherits from L<Web::Simple::Application> and imports L<strictures>,
 as well as installs a C<PSGI_ENV> constant for convenience, as well as some 
 other subroutines.
 
-Importing L<strictures> will automatically make you code use the C<strict> and
+Importing L<strictures> will automatically make your code use the C<strict> and
 C<warnings> pragma, so you can skip the usual:
 
   use strict;
@@ -118,6 +118,10 @@ the the equivalent of:
     extends 'Web::Simple::Application';
   }
 
+So you can use L<Moo> features in your application, such as creating attributes
+using the C<has> subroutine, etc.  Please see the documentation for L<Moo> for
+more information.
+
 It also exports the following subroutines for use in dispatchers:
 
   response_filter { ... };
@@ -136,7 +140,7 @@ is encountered in other code.
 
 =head1 DISPATCH STRATEGY
 
-L<Web::Simple> dispite being straightforward to use, has a powerful system
+L<Web::Simple> despite being straightforward to use, has a powerful system
 for matching all sorts of incoming URLs to one or more subroutines.  These
 subroutines can be simple actions to take for a given URL, or something
 more complicated, including entire L<Plack> applications, L<Plack::Middleware>
@@ -328,10 +332,9 @@ Finally,
 
   sub (/foo/...) {
 
-will match /foo/ on the beginning of the path -and- strip it, much like
-.html strips the extension. This is designed to be used to construct
-nested dispatch structures, but can also prove useful for having e.g. an
-optional language specification at the start of a path.
+Will match /foo/ on the beginning of the path -and- strip it. This is designed
+to be used to construct nested dispatch structures, but can also prove useful
+for having e.g. an optional language specification at the start of a path.
 
 Note that the '...' is a "maybe something here, maybe not" so the above
 specification will match like this:
@@ -344,8 +347,8 @@ specification will match like this:
 
   sub (.html) {
 
-will match and strip .html from the path (assuming the subroutine itself
-returns something, of course). This is normally used for rendering - e.g.
+will match .html from the path (assuming the subroutine itself returns
+something, of course). This is normally used for rendering - e.g.
 
   sub (.html) {
     response_filter { $self->render_html($_[1]) }
@@ -355,8 +358,7 @@ Additionally,
 
   sub (.*) {
 
-will match any extension and supplies the stripped extension as a match
-argument.
+will match any extension and supplies the extension as a match argument.
 
 =head3 Query and body parameter matches
 
@@ -652,7 +654,7 @@ None required yet. Maybe this module is perfect (hahahahaha ...).
 
 =head1 COPYRIGHT
 
-Copyright (c) 2009 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
+Copyright (c) 2010 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
 as listed above.
 
 =head1 LICENSE

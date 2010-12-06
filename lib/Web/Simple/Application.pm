@@ -99,7 +99,7 @@ sub _cli_usage {
 
 =head1 NAME
 
-Web::Simple::Application - A base class for your Web-Simple applications
+Web::Simple::Application - A base class for your Web-Simple application
 
 =head1 DESCRIPTION
 
@@ -109,11 +109,12 @@ lifting' for you in that regards.
 
 =head1 METHODS
 
-This class exposes the follow public methods.
+This class exposes the following public methods.
 
 =head2 default_config
 
-Provide configuration information to your application, for example:
+Merges with the C<config> initializer to provide configuration information for
+your application.  For example:
 
   sub default_config {
     (
@@ -122,12 +123,18 @@ Provide configuration information to your application, for example:
     );
   }
 
-Now, C<$self> will have an attribute C<config> which will be set to a HashRef
+Now, the C<config> attribute of C<$self>  will be set to a HashRef
 containing keys 'title' and 'posts_dir'.
+
+If you construct your application like:
+
+  MyWebSimpleApp::Web->new(config=>{environment=>'dev'})
+
+then C<config> will have a C<environment> key with a value of 'dev'.
 
 =head2 run_if_script
 
-In the case where you wish to run you L<Web::Simple> based application as a 
+In the case where you wish to run your L<Web::Simple> based application as a 
 stand alone CGI application, you can simple do:
 
   ## my_web_simple_app.pl
@@ -154,6 +161,18 @@ Or (even more simply) just inline the entire application:
   }
 
   HelloWorld->run_if_script;
+
+Additionally, you can treat the above script as though it were a standard PSGI
+application file (*.psgi).  For example you can start up up with C<plackup>
+
+  plackup my_web_simple_app.pl
+
+Which means you can write a L<Web::Simple> application as a plain old CGI
+application and seemlessly migrate to a L<Plack> based solution when you are
+ready for that.
+
+Lastly, L</run_if_script> will automatically detect and support a Fast CGI
+environment.
 
 =head2 to_psgi_app
 
@@ -182,6 +201,26 @@ L<Web::Simple> application; your app.psgi could be as simple as:
   use MyWebSimpleApp::Web;
   MyWebSimpleApp::Web->to_psgi_app;
 
+This means if you want to provide a 'default' set of middleware, one option is
+to modify this method:
+
+  use Web::Simple 'HelloWorld';
+  use Plack::Builder;
+ 
+  {
+    package HelloWorld;
+
+  
+    around 'to_psgi_app', sub {
+      my ($orig, $self) = (shift, shift);
+      my $app = $self->$orig(@_); 
+      builder {
+        enable ...; ## whatever middleware you want
+        $app;
+      };
+    };
+  }
+
 As always, mix and match the pieces you actually need and remember the 
 L<Web::Simple> philosophy of trying to keep it as minimal and simple as possible.
 
@@ -204,7 +243,7 @@ None required yet. Maybe this module is perfect (hahahahaha ...).
 
 =head1 COPYRIGHT
 
-Copyright (c) 2009 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
+Copyright (c) 2010 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
 as listed above.
 
 =head1 LICENSE

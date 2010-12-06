@@ -12,6 +12,8 @@ use Test::More (
     use Web::Simple 't::Web::Simple::SubDispatchArgs';
     package t::Web::Simple::SubDispatchArgs;
 
+    has 'attr' => (is=>'ro');
+
     sub dispatch_request {
         my $self = shift;
         sub (/) {
