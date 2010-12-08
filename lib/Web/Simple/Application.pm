@@ -126,22 +126,25 @@ your application.  For example:
 Now, the C<config> attribute of C<$self>  will be set to a HashRef
 containing keys 'title' and 'posts_dir'.
 
-If you construct your application like:
+The keys from default_config are merged into any config supplied, so
+if you construct your application like:
 
-  MyWebSimpleApp::Web->new(config=>{environment=>'dev'})
+  MyWebSimpleApp::Web->new(
+    config => { title => 'Spoon', environment => 'dev' }
+  )
 
-then C<config> will have a C<environment> key with a value of 'dev'.
+then C<config> will contain:
+
+  {
+    title => 'Spoon',
+    posts_dir => '/path/to/myapp/posts',
+    environment => 'dev'
+  }
 
 =head2 run_if_script
 
-In the case where you wish to run your L<Web::Simple> based application as a 
-stand alone CGI application, you can simple do:
-
-  ## my_web_simple_app.pl
-  use MyWebSimpleApp::Web;
-  MyWebSimpleApp::Web->run_if_script.
-
-Or (even more simply) just inline the entire application:
+The run_if_script method is designed to be used at the end of the script
+or .pm file where your application class is defined - for example:
 
   ## my_web_simple_app.pl
   #!/usr/bin/env perl
@@ -162,47 +165,47 @@ Or (even more simply) just inline the entire application:
 
   HelloWorld->run_if_script;
 
-Additionally, you can treat the above script as though it were a standard PSGI
+This returns a true value, so your file is now valid as a module - so
+
+  require 'my_web_simple_app.pl';
+
+  my $hw = HelloWorld->new;
+
+will work fine (and you can rename it to lib/HelloWorld.pm later to make it
+a real use-able module).
+
+However, it detects if it's being run as a script (via testing $0) and if
+so attempts to do the right thing.
+
+If run under a CGI environment, your application will execute as a CGI.
+
+If run under a FastCGI environment, your application will execute as a
+FastCGI process (this works both for dynamic shared-hosting-style FastCGI
+and for apache FastCgiServer style setups).
+
+If run from the commandline with a URL path, it runs a GET request against
+that path -
+
+  $ perl -Ilib examples/hello-world/hello-world.cgi /
+  200 OK
+  Content-Type: text/plain
+  
+  Hello world!
+
+Additionally, you can treat the file as though it were a standard PSGI
 application file (*.psgi).  For example you can start up up with C<plackup>
 
   plackup my_web_simple_app.pl
 
-Which means you can write a L<Web::Simple> application as a plain old CGI
-application and seemlessly migrate to a L<Plack> based solution when you are
-ready for that.
+or C<starman>
 
-Lastly, L</run_if_script> will automatically detect and support a Fast CGI
-environment.
+  starman my_web_simple_app.pl
 
 =head2 to_psgi_app
 
-Given a L<Web::Simple> application root namespace, return it in a form suitable
-to run in inside a L<Plack> container, or in L<Plack::Builder> or in a C<*.psgi>
-file:
-
-  ## app.psgi
-  use strictures 1;
-  use Plack::Builder;
-  use MyWebSimpleApp::Web;
-
-  builder {
-    ## enable middleware
-    enable 'StackTrace';
-    enable 'Debug';
-
-    ## return application
-    MyWebSimpleApp::Web->to_psgi_app;
-  };
-
-This could be run via C<plackup>, etc.  Please note the L<Plack::Builder> DSL
-is optional, if you are enabling L<Plack::Middleware> internally in your
-L<Web::Simple> application; your app.psgi could be as simple as:
-
-  use MyWebSimpleApp::Web;
-  MyWebSimpleApp::Web->to_psgi_app;
-
-This means if you want to provide a 'default' set of middleware, one option is
-to modify this method:
+This method is called by L</run_if_script> to create the L<PSGI> app coderef
+for use via L<Plack> and L<plackup>. If you want to globally add middleware,
+you can override this method:
 
   use Web::Simple 'HelloWorld';
   use Plack::Builder;
@@ -221,8 +224,21 @@ to modify this method:
     };
   }
 
-As always, mix and match the pieces you actually need and remember the 
-L<Web::Simple> philosophy of trying to keep it as minimal and simple as possible.
+This method can also be used to mount a Web::Simple application within
+a separate C<*.psgi> file -
+
+  use strictures 1;
+  use Plack::Builder;
+  use WSApp;
+  use AnotherWSApp;
+
+  builder {
+    mount '/' => WSApp->to_psgi_app;
+    mount '/another' => AnotherWSApp->to_psgi_app;
+  };
+
+This method can be called as a class method, in which case it implicitly
+calls ->new, or as an object method ... in which case it doesn't.
 
 =head2 run
 
