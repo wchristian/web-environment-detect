@@ -465,15 +465,15 @@ and
 
 are equivalent, but
 
-  sub ((GET + .html) | (POST + .html)) {
+  sub ((GET + /admin/...) | (POST + /admin/...)) {
 
 and
 
-  sub (GET + .html | POST + .html) {
+  sub (GET + /admin/... | POST + /admin/...) {
 
 are not - the latter is equivalent to
 
-  sub (GET + (.html|POST) + .html) {
+  sub (GET + (/admin/...|POST) + /admin/...) {
 
 which will never match!
 
