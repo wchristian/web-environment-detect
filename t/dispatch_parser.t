@@ -93,6 +93,22 @@ ok(
 }
 
 {
+   my $post = $dp->parse('/foo-bar/*');
+
+   is_deeply(
+     [ $post->({ PATH_INFO => '/foo-bar/one' }) ],
+     [ {}, 'one' ],
+     '/foo-bar/one parses out one'
+   );
+
+   is_deeply(
+     [ $post->({ PATH_INFO => '/foo-bar/one/' }) ],
+     [],
+     '/foo-bar/one/ does not match'
+   );
+}
+
+{
    my $combi = $dp->parse('GET+/post/*');
 
    is_deeply(
