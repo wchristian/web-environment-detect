@@ -174,6 +174,7 @@ sub _parse_param_handler {
 
   for ($_[1]) {
     my (@required, @single, %multi, $star, $multistar, %positional, $have_kw);
+    my %spec;
     my $pos_idx = 0;
     PARAM: { do {
 
@@ -191,13 +192,11 @@ sub _parse_param_handler {
 
         $self->_blam("* is always named; no need to supply :") if $is_kw;
 
-        $multi ? ($multistar = 1) : ($star = 1);
-
-        $have_kw = 1;
-
-        if ($star && $multistar) {
-          $self->_blam("Can't use * and \@* in the same parameter match");
+        if ($star) {
+          $self->_blam("Can only use one * or \@* in a parameter match");
         }
+
+        $spec{star} = { multi => $multi };
       } else {
 
         # @foo= or foo= or @foo~ or foo~
@@ -209,57 +208,19 @@ sub _parse_param_handler {
         # check for = or ~ on the end
 
         /\G\=/gc
-          ? push(@required, $name)
+          ? push(@{$spec{required}||=[]}, $name)
           : (/\G\~/gc or $self->_blam('Expected = or ~ after parameter name'));
-
-        # record the key in the right category depending on the multi (@) flag
-
-        $multi ? ($multi{$name} = 1) : (push @single, $name);
 
         # record positional or keyword
 
-        $is_kw ? ($have_kw = 1) : ($positional{$name} = $pos_idx++);
+        push @{$spec{$is_kw ? 'named' : 'positional'}||=[]},
+          { name => $name, multi => $multi };
       }
     } while (/\G\&/gc) }
 
     return sub {
       my $raw = $unpacker->($_[0]);
-      foreach my $name (@required) {
-        return unless exists $raw->{$name};
-      }
-      my (%p, %done);
-      my @p = (undef) x $pos_idx;
-      foreach my $name (
-        @single,
-        ($star
-          ? (grep { !exists $multi{$_} } keys %$raw)
-          : ()
-        )
-      ) {
-        if (exists $raw->{$name}) {
-          if (exists $positional{$name}) {
-            $p[$positional{$name}] = $raw->{$name}->[-1];
-          } else {
-            $p{$name} = $raw->{$name}->[-1];
-          }
-        }
-        $done{$name} = 1;
-      }
-      foreach my $name (
-        keys %multi,
-        ($multistar
-          ? (grep { !exists $done{$_} && !exists $multi{$_} } keys %$raw)
-          : ()
-        )
-      ) {
-        if (exists $positional{$name}) {
-          $p[$positional{$name}] = $raw->{$name}||[];
-        } else {
-          $p{$name} = $raw->{$name}||[];
-        }
-      }
-      $p[$pos_idx] = \%p if $have_kw;
-      return ({}, @p);
+      Web::Dispatch::Predicates::_extract_params($raw, \%spec);
     };
   }
 }

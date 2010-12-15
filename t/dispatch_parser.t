@@ -315,7 +315,7 @@ foreach my $win (
     [ '?:baz=&:evil=' => { baz => 'one two', evil => '/' } ],
     [ '?*' => \%all_single ],
     [ '?@*' => \%all_multi ],
-    [ '?foo=&@*' => 'FOO', do { my %h = %all_multi; delete $h{foo}; \%h } ],
+    [ '?foo=&@*' => 'FOO', \%all_multi ],
     [ '?:foo=&@*' => { %all_multi, foo => 'FOO' } ],
     [ '?:@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
 ) {
@@ -366,7 +366,7 @@ foreach my $win2 (
     [ '/foo/bar/+?:baz=&:evil=' => { baz => 'one two', evil => '/' } ],
     [ '/foo/bar/+?*' => \%all_single ],
     [ '/foo/bar/+?@*' => \%all_multi ],
-    [ '/foo/bar/+?foo=&@*' => 'FOO', do { my %h = %all_multi; delete $h{foo}; \%h } ],
+    [ '/foo/bar/+?foo=&@*' => 'FOO', \%all_multi ],
     [ '/foo/bar/+?:foo=&@*' => { %all_multi, foo => 'FOO' } ],
     [ '/foo/bar/+?:@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
 ) {
@@ -417,7 +417,7 @@ foreach my $win3 (
     [ '/foo/bar+?:baz=&:evil=' => { baz => 'one two', evil => '/' } ],
     [ '/foo/bar+?*' => \%all_single ],
     [ '/foo/bar+?@*' => \%all_multi ],
-    [ '/foo/bar+?foo=&@*' => 'FOO', do { my %h = %all_multi; delete $h{foo}; \%h } ],
+    [ '/foo/bar+?foo=&@*' => 'FOO', \%all_multi ],
     [ '/foo/bar+?:foo=&@*' => { %all_multi, foo => 'FOO' } ],
     [ '/foo/bar+?:@bar=&*' => { %all_single, bar => [ qw(BAR1 BAR2) ] } ],
 ) {

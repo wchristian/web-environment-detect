@@ -101,4 +101,36 @@ sub match_extension {
   };
 }
 
+sub _extract_params {
+  my ($raw, $spec) = @_;
+  foreach my $name (@{$spec->{required}||[]}) {
+    return unless exists $raw->{$name};
+  }
+  my @ret = (
+    {},
+    map {
+      $_->{multi} ? $raw->{$_->{name}}||[] : $raw->{$_->{name}}->[-1]
+    } @{$spec->{positional}||[]}
+  );
+  # separated since 'or' is short circuit
+  my ($named, $star) = ($spec->{named}, $spec->{star});
+  if ($named or $star) {
+    my %kw;
+    if ($star) {
+      @kw{keys %$raw} = (
+        $star->{multi}
+          ? values %$raw
+          : map $_->[-1], values %$raw
+      );
+    }
+    foreach my $n (@{$named||[]}) {
+      next if !$n->{multi} and !exists $raw->{$n->{name}};
+      $kw{$n->{name}} = 
+        $n->{multi} ? $raw->{$n->{name}}||[] : $raw->{$n->{name}}->[-1];
+    }
+    push @ret, \%kw;
+  }
+  @ret;
+}
+
 1;
