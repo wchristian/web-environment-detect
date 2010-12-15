@@ -169,9 +169,6 @@ sub _url_path_segment_match {
 sub _parse_param_handler {
   my ($self, $spec, $type) = @_;
 
-  require Web::Simple::ParamParser;
-  my $unpacker = Web::Simple::ParamParser->can("get_unpacked_${type}_from");
-
   for ($_[1]) {
     my (@required, @single, %multi, $star, $multistar, %positional, $have_kw);
     my %spec;
@@ -218,10 +215,7 @@ sub _parse_param_handler {
       }
     } while (/\G\&/gc) }
 
-    return sub {
-      my $raw = $unpacker->($_[0]);
-      Web::Dispatch::Predicates::_extract_params($raw, \%spec);
-    };
+    return Web::Dispatch::Predicates->can("match_${type}")->(\%spec);
   }
 }
 

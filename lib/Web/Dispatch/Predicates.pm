@@ -5,7 +5,7 @@ use base qw(Exporter);
 
 our @EXPORT = qw(
   match_and match_or match_not match_method match_path match_path_strip
-  match_extension
+  match_extension match_query match_body
 );
 
 sub match_and {
@@ -98,6 +98,28 @@ sub match_extension {
     } else {
       ();
     }
+  };
+}
+
+sub match_query {
+  my $spec = shift;
+  require Web::Dispatch::ParamParser;
+  sub {
+    _extract_params(
+      Web::Dispatch::ParamParser::get_unpacked_query_from($_[0]),
+      $spec
+    )
+  };
+}
+
+sub match_body {
+  my $spec = shift;
+  require Web::Dispatch::ParamParser;
+  sub {
+    _extract_params(
+      Web::Dispatch::ParamParser::get_unpacked_body_from($_[0]),
+      $spec
+    )
   };
 }
 
