@@ -37,7 +37,7 @@ sub _dispatch {
     } elsif (ref($try) eq 'ARRAY') {
       return $try;
     }
-    my @result = $self->_to_try($try)->($env, @match);
+    my @result = $self->_to_try($try, \@match)->($env, @match);
     next unless @result and defined($result[0]);
     if (ref($result[0]) eq 'ARRAY') {
       return $result[0];
@@ -62,7 +62,7 @@ sub _dispatch {
 }
 
 sub _to_try {
-  my ($self, $try) = @_;
+  my ($self, $try, $more) = @_;
   if (ref($try) eq 'CODE') {
     if (defined(my $proto = prototype($try))) {
       $self->_construct_node(
@@ -71,6 +71,10 @@ sub _to_try {
     } else {
       $try
     }
+  } elsif (!ref($try) and ref($more->[0]) eq 'CODE') {
+    $self->_construct_node(
+      match => $self->_parser->parse($try), run => shift(@$more)
+    )->to_app;
   } elsif (blessed($try) && $try->can('to_app')) {
     $try->to_app;
   } else {
@@ -80,8 +84,7 @@ sub _to_try {
 
 sub _construct_node {
   my ($self, %args) = @_;
-  @args{keys %$_} = values %$_ for $self->node_args;
-  $self->node_class->new(\%args);
+  $self->node_class->new({ %{$self->node_args}, %args });
 }
 
 1;

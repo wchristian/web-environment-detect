@@ -29,6 +29,7 @@ ${hat} here\n";
 
 sub parse {
   my ($self, $spec) = @_;
+  $spec =~ s/\s+//g; # whitespace is not valid
   return $self->_cache->{$spec} ||= $self->_parse_spec($spec);
 }
 
@@ -36,7 +37,6 @@ sub _parse_spec {
   my ($self, $spec, $nested) = @_;
   for ($_[1]) {
     my @match;
-    /^\G\s*/; # eat leading whitespace
     PARSE: { do {
       push @match, $self->_parse_spec_section($_)
         or $self->_blam("Unable to work out what the next section is");

@@ -7,5 +7,6 @@ requires 'Syntax::Keyword::Gather';
 requires 'Plack';
 requires 'Moo';
 requires 'warnings::illegalproto';
+requires 'Data::Dumper::Concise';
 
 WriteAll;

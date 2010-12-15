@@ -1,7 +1,7 @@
 use strict;
 use warnings FATAL => 'all';
 
-use Data::Dump qw(dump);
+use Data::Dumper::Concise;
 use Test::More (
   eval { require HTTP::Request::AsCGI }
     ? 'no_plan'
@@ -20,7 +20,7 @@ use Test::More (
             $self->show_landing(@_);
         },
         sub(/...) {
-            sub (GET + /user) {
+            q(GET + /user) => sub {
                 $self->show_users(@_);
             },
             sub (/user/*) {
@@ -36,30 +36,34 @@ use Test::More (
 
     sub show_landing {
         my ($self, @args) = @_;
+        local $self->{_dispatcher};
         return [
             200, ['Content-Type' => 'application/perl' ],
-            [Data::Dump::dump @args],
+            [::Dumper \@args],
         ];
     }
     sub show_users {
         my ($self, @args) = @_;
+        local $self->{_dispatcher};
         return [
             200, ['Content-Type' => 'application/perl' ],
-            [Data::Dump::dump @args],
+            [::Dumper \@args],
         ];
     }
     sub show_user {
         my ($self, @args) = @_;
+        local $self->{_dispatcher};
         return [
             200, ['Content-Type' => 'application/perl' ],
-            [Data::Dump::dump @args],
+            [::Dumper \@args],
         ];
     }
     sub process_post {
         my ($self, @args) = @_;
+        local $self->{_dispatcher};
         return [
             200, ['Content-Type' => 'application/perl' ],
-            [Data::Dump::dump @args],
+            [::Dumper \@args],
         ];
     }
 }
@@ -84,7 +88,8 @@ cmp_ok $get_landing->code, '==', 200,
   '200 on GET';
 
 {
-    my ($self, $env, @noextra) = eval $get_landing->content;
+    my ($self, $env, @noextra) = @{eval $get_landing->content};
+    die $@ if $@;
     is scalar(@noextra), 0, 'No extra stuff';
     is ref($self), 't::Web::Simple::SubDispatchArgs', 'got object';
     is ref($env), 'HASH', 'Got hashref';
@@ -98,7 +103,7 @@ cmp_ok $get_users->code, '==', 200,
   '200 on GET';
 
 {
-    my ($self, $env, @noextra) = eval $get_users->content;
+    my ($self, $env, @noextra) = @{eval $get_users->content};
     is scalar(@noextra), 0, 'No extra stuff';
     is ref($self), 't::Web::Simple::SubDispatchArgs', 'got object';
     is ref($env), 'HASH', 'Got hashref';
@@ -112,7 +117,7 @@ cmp_ok $get_user->code, '==', 200,
   '200 on GET';
 
 {
-    my ($self, $env, @noextra) = eval $get_user->content;
+    my ($self, $env, @noextra) = @{eval $get_user->content};
     is scalar(@noextra), 0, 'No extra stuff';
     is ref($self), 't::Web::Simple::SubDispatchArgs', 'got object';
     is ref($env), 'HASH', 'Got hashref';
@@ -126,7 +131,7 @@ cmp_ok $post_user->code, '==', 200,
   '200 on POST';
 
 {
-    my ($self, $params, $env, @noextra) = eval $post_user->content;
+    my ($self, $params, $env, @noextra) = @{eval $post_user->content};
     is scalar(@noextra), 0, 'No extra stuff';
     is ref($self), 't::Web::Simple::SubDispatchArgs', 'got object';
     is ref($params), 'HASH', 'Got POST hashref';
