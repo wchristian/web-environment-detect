@@ -41,10 +41,12 @@ sub _dispatch {
     next unless @result and defined($result[0]);
     if (ref($result[0]) eq 'ARRAY') {
       return $result[0];
-    } elsif (blessed($result[0]) && $result[0]->can('wrap')) {
-      return $result[0]->wrap(sub {
-        $self->_dispatch($_[0], @match)
-      })->($env);
+    } elsif (blessed($result[0]) && $result[0]->isa('Plack::Middleware')) {
+      die "Multiple results but first one is a middleware ($result[0])"
+        if @result > 1;
+      my $mw = $result[0];
+      $mw->app(sub { $self->_dispatch($_[0], @match) });
+      return $mw->to_app->($env);
     } elsif (blessed($result[0]) && !$result[0]->can('to_app')) {
       return $result[0];
     } else {

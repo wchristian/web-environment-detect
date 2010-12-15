@@ -109,7 +109,7 @@ sub _parse_spec_section {
       return do {
         my $match = $self->_parse_spec_section($_);
         return sub {
-          return {} unless $match->(@_);
+          return {} unless my @discard = $match->(@_);
           return;
         };
       };
@@ -179,23 +179,7 @@ sub _url_path_segment_match {
 
 sub _url_extension_match {
   my ($self, $str, $extension) = @_;
-  if ($extension eq '*') {
-    sub {
-      if ((my $tmp = shift->{PATH_INFO}) =~ s/\.(\w+)$//) {
-        ({ PATH_INFO => $tmp }, $1);
-      } else {
-        ();
-      }
-    };
-  } else {
-    sub {
-      if ((my $tmp = shift->{PATH_INFO}) =~ s/\.\Q${extension}\E$//) {
-        ({ PATH_INFO => $tmp });
-      } else {
-        ();
-      }
-    };
-  }
+  match_extension($extension);
 }
 
 sub _parse_param_handler {

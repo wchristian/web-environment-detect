@@ -23,17 +23,12 @@ my $dp = Web::Dispatch::Parser->new;
    );
 }
 
-ok(
-  !eval { $dp->parse('GET POST'); 1; },
-  "Don't yet allow two methods"
-);
-
 {
    my $html = $dp->parse('.html');
 
    is_deeply(
      [ $html->({ PATH_INFO => '/foo/bar.html' }) ],
-     [ { PATH_INFO => '/foo/bar' } ],
+     [ { } ],
      '.html matches'
    );
 
@@ -49,7 +44,7 @@ ok(
 
    is_deeply(
      [ $any_ext->({ PATH_INFO => '/foo/bar.html' }) ],
-     [ { PATH_INFO => '/foo/bar' }, 'html' ],
+     [ { }, 'html' ],
      '.html matches .* and extension returned'
    );
 
@@ -89,6 +84,12 @@ ok(
      [ $post->({ PATH_INFO => '/post/one/' }) ],
      [],
      '/post/one/ does not match'
+   );
+
+   is_deeply(
+     [ $post->({ PATH_INFO => '/post/one.html' }) ],
+     [ {}, 'one' ],
+     '/post/one.html still parses out one'
    );
 }
 
@@ -219,7 +220,7 @@ ok(
 
    is_deeply(
      [ $not->({ PATH_INFO => '/foo.xml' }) ],
-     [ { PATH_INFO => '/foo' }, 'xml' ],
+     [ {}, 'xml' ],
      '!.html+.* matches /foo.xml'
    );
 

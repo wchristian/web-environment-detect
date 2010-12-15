@@ -1,9 +1,14 @@
 package Web::Dispatch::Wrapper;
 
 use strictures 1;
+use Moo;
 use Exporter 'import';
 
 our @EXPORT = qw(dispatch_wrapper redispatch_to response_filter);
+
+extends 'Plack::Middleware';
+
+has 'wrapper' => (is => 'ro', required => 1);
 
 sub dispatch_wrapper (&) {
   my ($code) = @_;
@@ -12,7 +17,7 @@ sub dispatch_wrapper (&) {
 
 sub from_code {
   my ($class, $code) = @_;
-  bless(\$code, $class);
+  $class->new(wrapper => $code);
 }
 
 sub redispatch_to {
@@ -34,8 +39,8 @@ sub response_filter (&) {
   });
 }
 
-sub wrap {
-  my $code = ${$_[0]};
+sub to_app {
+  my $code = $_[0]->wrapper;
   my $app = $_[1];
   sub { $code->($_[0], $app) }
 }

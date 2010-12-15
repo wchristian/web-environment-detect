@@ -3,7 +3,10 @@ package Web::Dispatch::Predicates;
 use strictures 1;
 use base qw(Exporter);
 
-our @EXPORT = qw(match_and match_or match_method match_path match_path_strip);
+our @EXPORT = qw(
+  match_and match_or match_method match_path match_path_strip
+  match_extension
+);
 
 sub match_and {
   my @match = @_;
@@ -70,6 +73,21 @@ sub match_path_strip {
     }
     return;
   }
+}
+
+sub match_extension {
+  my ($extension) = @_;
+  my $wild = (!$extension or $extension eq '*');
+  my $re = $wild
+             ? qr/\.(\w+)$/
+             : qr/\.(\Q${extension}\E)$/;
+  sub {
+    if ($_[0]->{PATH_INFO} =~ $re) {
+      ($wild ? ({}, $1) : {});
+    } else {
+      ();
+    }
+  };
 }
 
 1;
