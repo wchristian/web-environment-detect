@@ -106,13 +106,7 @@ sub _parse_spec_section {
     # !something
 
     /\G!/gc and
-      return do {
-        my $match = $self->_parse_spec_section($_);
-        return sub {
-          return {} unless my @discard = $match->(@_);
-          return;
-        };
-      };
+      return match_not($self->_parse_spec_section($_));
 
     # ?<param spec>
     /\G\?/gc and

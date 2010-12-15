@@ -4,7 +4,7 @@ use strictures 1;
 use base qw(Exporter);
 
 our @EXPORT = qw(
-  match_and match_or match_method match_path match_path_strip
+  match_and match_or match_not match_method match_path match_path_strip
   match_extension
 );
 
@@ -38,6 +38,17 @@ sub match_or {
       }
     }
     return;
+  }
+}
+
+sub match_not {
+  my ($match) = @_;
+  sub {
+    if (my @discard = $match->($_[0])) {
+      ();
+    } else {
+      ({});
+    }
   }
 }
 
