@@ -86,7 +86,7 @@ sub _parse_spec_section {
     # GET POST PUT HEAD ...
 
     /\G([A-Z]+)/gc and
-      return $self->_http_method_match($_, $1);
+      return match_method($1);
 
     # /...
 
@@ -96,7 +96,7 @@ sub _parse_spec_section {
     # .* and .html
 
     /\G\.(\*|\w+)/gc and
-      return $self->_url_extension_match($_, $1);
+      return match_extension($1);
 
     # (...)
 
@@ -117,11 +117,6 @@ sub _parse_spec_section {
       return $self->_parse_param_handler($_, 'body');
   }
   return; # () will trigger the blam in our caller
-}
-
-sub _http_method_match {
-  my ($self, $str, $method) = @_;
-  match_method($method);
 }
 
 sub _url_path_match {
@@ -169,11 +164,6 @@ sub _url_path_segment_match {
       return '([^/]+?)';
   }
   return ();
-}
-
-sub _url_extension_match {
-  my ($self, $str, $extension) = @_;
-  match_extension($extension);
 }
 
 sub _parse_param_handler {
