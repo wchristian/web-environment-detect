@@ -1,6 +1,4 @@
-use strict;
-use warnings FATAL => 'all';
-
+use strictures 1;
 use Test::More;  
 use Plack::Test;
 use HTTP::Request::Common qw(GET POST);
@@ -10,7 +8,7 @@ use HTTP::Request::Common qw(GET POST);
   use Web::Simple;
   sub dispatch_request {
     my $self = shift;
-      sub (.html) {
+    sub (.html) {
       response_filter {
         return [
           200,
