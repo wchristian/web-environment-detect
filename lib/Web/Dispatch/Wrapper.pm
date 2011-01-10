@@ -41,7 +41,7 @@ sub response_filter (&) {
 
 sub to_app {
   my $code = $_[0]->wrapper;
-  my $app = $_[1];
+  my $app = $_[0]->app;
   sub { $code->($_[0], $app) }
 }
 
