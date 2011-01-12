@@ -67,19 +67,39 @@ sub run {
   } elsif ($ENV{GATEWAY_INTERFACE}) {
     return $self->_run_cgi;
   }
-  unless (@ARGV && $ARGV[0] =~ m{^/}) {
+  unless (@ARGV && $ARGV[0] =~ m{^[A-Z/]}) {
     return $self->_run_cli(@ARGV);
   }
 
-  my $path = shift @ARGV;
+  my @args = @ARGV;
 
-  require HTTP::Request::Common;
+  unshift(@args, 'GET') if $args[0] =~ m{^/};
+
+  $self->_run_test_request(@args);
+}
+
+sub _run_test_request {
+  my ($self, $method, $path, @rest) = @_;
+
+  require HTTP::Request;
   require Plack::Test;
-  local *GET = \&HTTP::Request::Common::GET;
 
-  my $request = GET($path);
+  my $request = HTTP::Request->new($method => $path);
+  if ($method eq 'POST' or $method eq 'PUT' and @rest) {
+    my $content = do {
+      require URI;
+      my $url = URI->new('http:');
+      $url->query_form(@rest);
+      $url->query;
+    };
+    $request->header('Content-Type' => 'application/x-www-form-urlencoded');
+    $request->header('Content-Length' => length($content));
+    $request->content($content);
+  }
   my $response;
-  Plack::Test::test_psgi($self->to_psgi_app, sub { $response = shift->($request) });
+  Plack::Test::test_psgi(
+    $self->to_psgi_app, sub { $response = shift->($request) }
+  );
   print $response->as_string;
 }
 
