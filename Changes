@@ -1,5 +1,7 @@
 Change log for Web::Simple
 
+  - Make Web::Dispatch return [\$cv] as \$cv to allow subref responses
+
 0.005 - Tue Jan 11 2011 22:09 UTC
   - Redocument to cover changes
   - Factor dispatcher code out into Web::Dispatch

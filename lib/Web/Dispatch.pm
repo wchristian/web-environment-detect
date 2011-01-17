@@ -40,6 +40,9 @@ sub _dispatch {
     my @result = $self->_to_try($try, \@match)->($env, @match);
     next unless @result and defined($result[0]);
     if (ref($result[0]) eq 'ARRAY') {
+      if (@{$result[0]} == 1 and ref($result[0][0]) eq 'CODE') {
+        return $result[0][0];
+      }
       return $result[0];
     } elsif (blessed($result[0]) && $result[0]->isa('Plack::Middleware')) {
       die "Multiple results but first one is a middleware ($result[0])"
