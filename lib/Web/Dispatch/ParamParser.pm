@@ -14,7 +14,7 @@ sub get_unpacked_query_from {
 
 sub get_unpacked_body_from {
   return $_[0]->{+UNPACKED_BODY} ||= do {
-    if (($_[0]->{CONTENT_TYPE}||'') eq 'application/x-www-form-urlencoded'
+      if (index(lc($_[0]->{CONTENT_TYPE}||''), 'application/x-www-form-urlencoded') >= 0 
         and defined $_[0]->{CONTENT_LENGTH}) {
       $_[0]->{'psgi.input'}->read(my $buf, $_[0]->{CONTENT_LENGTH});
       _unpack_params($buf);
@@ -23,6 +23,7 @@ sub get_unpacked_body_from {
     }
   };
 }
+
 
 {
   # shamelessly stolen from HTTP::Body::UrlEncoded by Christian Hansen
