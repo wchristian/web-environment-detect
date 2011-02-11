@@ -15,7 +15,7 @@ use HTTP::Request::Common qw(GET POST);
           [ 'Content-Type' => 'text/html' ], 
           [ shift->{name} ],
         ];
-      };
+      }
     },
     sub (GET + /index) {
       bless {name=>'john'}, 'CrazyHotWildWet';

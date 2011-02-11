@@ -11,7 +11,7 @@ for (qw(match run)) {
 sub call {
   my ($self, $env) = @_;
   if (my ($env_delta, @match) = $self->_match->($env)) {
-    $self->_curry(@match)->({ %$env, %$env_delta });
+    ($env_delta, $self->_curry(@match));
   } else {
     ()
   }

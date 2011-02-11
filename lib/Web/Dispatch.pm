@@ -2,6 +2,9 @@ package Web::Dispatch;
 
 use Sub::Quote;
 use Scalar::Util qw(blessed);
+
+sub MAGIC_MIDDLEWARE_KEY { __PACKAGE__.'.middleware' }
+
 use Moo;
 use Web::Dispatch::Parser;
 use Web::Dispatch::Node;
@@ -47,7 +50,14 @@ sub _dispatch {
     } elsif (blessed($result[0]) && $result[0]->isa('Plack::Middleware')) {
       die "Multiple results but first one is a middleware ($result[0])"
         if @result > 1;
+      # middleware needs to uplevel exactly once to wrap the rest of the
+      # level it was created for - next elsif unwraps it
+      return { MAGIC_MIDDLEWARE_KEY, $result[0] };
       my $mw = $result[0];
+    } elsif (
+      ref($result[0]) eq 'HASH'
+      and my $mw = $result[0]->{+MAGIC_MIDDLEWARE_KEY}
+    ) {
       $mw->app(sub { $self->_dispatch($_[0], @match) });
       return $mw->to_app->($env);
     } elsif (blessed($result[0]) && !$result[0]->can('to_app')) {
@@ -55,12 +65,7 @@ sub _dispatch {
     } else {
       # make a copy so we don't screw with it assigning further up
       my $env = $env;
-      # try not to end up quite so bloody deep in the call stack
-      if (@match) {
-        unshift @match, sub { $self->_dispatch($env, @result) };
-      } else {
-        @match = @result;
-      }
+      unshift @match, sub { $self->_dispatch($env, @result) };
     }
   }
   return;
