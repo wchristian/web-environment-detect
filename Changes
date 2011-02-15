@@ -3,6 +3,8 @@ Change log for Web::Simple
   - Fix Content-type issue (ie, Content-type: blah works, 
     but Content-type: blah; charset: blah shits flames)
   - Make Web::Dispatch return [\$cv] as \$cv to allow subref responses
+  - Stop undef errors killing XML::Tags conversion to string
+  - Fixup dispatcher logic so dispatchers within a /foo/... work correctly
 
 0.005 - Tue Jan 11 2011 22:09 UTC
   - Redocument to cover changes
