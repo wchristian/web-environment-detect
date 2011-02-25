@@ -435,12 +435,6 @@ Copyright (c) 2010 Matt S. Trout <mst@shadowcat.co.uk>
 
 =head1 LICENSE
 
-This text may be distributed under the GPL (v2 or later), the Artistic License
-(v1 or later), the Creative Commons Attribution (CC BY v3 or later), the
-Mozilla Public License (v1 or later, in honour of the license of the
-takahashi.xul system I used to write these slides originally), or the
-WTFPL (see <http://sam.zoy.org/wtfpl/COPYING>).
-
-If you'd like me to add another license, please ask.
+This text is free documentation under the same license as perl itself.
 
 =cut
