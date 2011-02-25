@@ -269,22 +269,12 @@ useful for testing:
     my $c = HTTP::Request::AsCGI->new(@args)->setup;
     $app->run;
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Matt S. Trout <mst@shadowcat.co.uk>
+See L<Web::Simple> for authors.
 
-=head1 CONTRIBUTORS
+=head1 COPYRIGHT AND LICENSE
 
-None required yet. Maybe this module is perfect (hahahahaha ...).
-
-=head1 COPYRIGHT
-
-Copyright (c) 2010 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
-as listed above.
-
-=head1 LICENSE
-
-This library is free software and may be distributed under the same terms
-as perl itself.
+See L<Web::Simple> for the copyright and license.
 
 =cut
