@@ -1,5 +1,7 @@
 Change log for Web::Simple
 
+  - Add Antiquated Perl slides in a POD document.
+
 0.008 - 2011-02-16
   - Once more.
 

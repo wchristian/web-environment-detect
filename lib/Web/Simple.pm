@@ -626,7 +626,8 @@ that having a bare minimum system for writing web applications that doesn't
 drive me insane was rather nice and decided to spend my attempt at nanowrimo
 for 2009 improving and documenting it to the point where others could use it.
 
-The Antiquated Perl talk can be found at L<http://www.shadowcat.co.uk/archive/conference-video/>.
+The Antiquated Perl talk can be found at L<http://www.shadowcat.co.uk/archive/conference-video/> and the slides are reproduced in this distribution under
+L<Web::Simple::AntiquatedPerl>.
 
 =head1 COMMUNITY AND SUPPORT
 
