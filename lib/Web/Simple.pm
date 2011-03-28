@@ -109,7 +109,7 @@ on *fatal* warnings so if you have any warnings at any point from the file
 that you did 'use Web::Simple' in, then your application will die. This is,
 so far, considered a feature.
 
-When we inherit from L<Web::Simple::Application> we also use <Moo>, which is
+When we inherit from L<Web::Simple::Application> we also use L<Moo>, which is
 the the equivalent of:
 
   {
