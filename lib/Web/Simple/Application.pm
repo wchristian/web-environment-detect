@@ -102,7 +102,9 @@ sub _run_test_request {
   );
   print STDERR $response->status_line."\n";
   print STDERR $response->headers_as_string("\n")."\n";
-  print STDOUT $response->content."\n";
+  my $content = $response->content;
+  $content .= "\n" if length($content) and $content !~ /\n\z/;
+  print STDOUT $content if $content;
 }
 
 sub _run_cli {
