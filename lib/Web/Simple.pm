@@ -343,6 +343,15 @@ specification will match like this:
   /foo/        # match and strip path to '/'
   /foo/bar/baz # match and strip path to '/bar/baz'
 
+Note: Since Web::Simple handles a concept of file extensions, * and **
+matchers will not by default match things after a final dot, and this
+can be modified by using *.* and **.* in the final position, i.e.:
+
+  /one/*       matches /one/two.three    and captures "two"
+  /one/*.*     matches /one/two.three    and captures "two.three"
+  /**          matches /one/two.three    and captures "one/two"
+  /**.*        matches /one/two.three    and captures "one/two.three"
+
 =head3 Extension matches
 
   sub (.html) {
