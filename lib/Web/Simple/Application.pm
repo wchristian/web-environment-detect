@@ -62,7 +62,10 @@ sub to_psgi_app {
 
 sub run {
   my $self = shift;
-  if ($ENV{PHP_FCGI_CHILDREN} || $ENV{FCGI_ROLE} || $ENV{FCGI_SOCKET_PATH}) {
+  if (
+    $ENV{PHP_FCGI_CHILDREN} || $ENV{FCGI_ROLE} || $ENV{FCGI_SOCKET_PATH}
+    || -S STDIN # STDIN is a socket, almost certainly FastCGI
+    ) {
     return $self->_run_fcgi;
   } elsif ($ENV{GATEWAY_INTERFACE}) {
     return $self->_run_cgi;
