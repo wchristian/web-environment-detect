@@ -100,7 +100,9 @@ sub _run_test_request {
   Plack::Test::test_psgi(
     $self->to_psgi_app, sub { $response = shift->($request) }
   );
-  print $response->as_string;
+  print STDERR $response->status_line."\n";
+  print STDERR $response->headers_as_string("\n")."\n";
+  print STDOUT $response->content."\n";
 }
 
 sub _run_cli {

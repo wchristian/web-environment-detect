@@ -1,5 +1,7 @@
 Change log for Web::Simple
 
+  - Change CLI mode to print status line and headers to STDERR and content
+    to STDOUT so that './myapp /foo.html >foo.html' works sanely
   - Add *.* and **.* dispatch types to keep extension
   - Add Antiquated Perl slides in a POD document.
 
