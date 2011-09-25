@@ -1,5 +1,6 @@
 Change log for Web::Simple
 
+  - Update Plack usage to call ::Handler:: classes not ::Server::
   - Assume FastCGI mode if STDIN is a socket (works some places env vars fail)
   - Change CLI mode to print status line and headers to STDERR and content
     to STDOUT so that './myapp /foo.html >foo.html' works sanely

@@ -45,14 +45,14 @@ sub run_if_script {
 
 sub _run_cgi {
   my $self = shift;
-  require Plack::Server::CGI;
-  Plack::Server::CGI->run($self->to_psgi_app);
+  require Plack::Handler::CGI;
+  Plack::Handler::CGI->new->run($self->to_psgi_app);
 }
 
 sub _run_fcgi {
   my $self = shift;
-  require Plack::Server::FCGI;
-  Plack::Server::FCGI->run($self->to_psgi_app);
+  require Plack::Handler::FCGI;
+  Plack::Handler::FCGI->new->run($self->to_psgi_app);
 }
 
 sub to_psgi_app {
