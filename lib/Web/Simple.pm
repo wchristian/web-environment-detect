@@ -363,9 +363,10 @@ Query and body parameters can be match via
   sub (?<param spec>) { # match URI query
   sub (%<param spec>) { # match body params
 
-The body is only matched if the content type is
-application/x-www-form-urlencoded (note this means that Web::Simple does
-not yet handle uploads; this will be addressed in a later release).
+The body spec will match if the request content is either
+application/x-www-form-urlencoded or multipart/form-data - the latter
+of which is required for uploads, which are now handled experimentally
+- see below.
 
 The param spec is elements of one of the following forms -
 
