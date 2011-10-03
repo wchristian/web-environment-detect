@@ -45,22 +45,31 @@ sub _dispatch {
     next unless @result and defined($result[0]);
 
     my $first = $result[0];
-
-    return $self->_unpack_array_match( $first )
-      if ref($first) eq 'ARRAY';
-
-    return $self->_prepare_middleware( $first, \@result )
-      if blessed($first) && $first->isa('Plack::Middleware');
-
-    return $self->_unwrap_middleware( $first, \@match, $env )
-      if ref($first) eq 'HASH' and $first->{+MAGIC_MIDDLEWARE_KEY};
-
-    return $first
-      if blessed($first) && !$first->can('to_app');
+    my $dispatch = $self->_valid_dispatch( $first, \@result, \@match, $env );
+    return $dispatch if $dispatch;
 
     # make a copy so we don't screw with it assigning further up
     my $env = $env;
     unshift @match, sub { $self->_dispatch($env, @result) };
+  }
+
+  return;
+}
+
+sub _valid_dispatch {
+  my ( $self, $first, $result, $match, $env ) = @_;
+
+  if ( ref($first) eq 'ARRAY' ) {
+    return $self->_unpack_array_match( $first );
+  }
+  elsif ( blessed($first) && $first->isa('Plack::Middleware') ) {
+    return $self->_prepare_middleware( $first, $result );
+  }
+  elsif ( ref($first) eq 'HASH' and $first->{+MAGIC_MIDDLEWARE_KEY} ) {
+    return $self->_unwrap_middleware( $first, $match, $env );
+  }
+  elsif ( blessed($first) && !$first->can('to_app') ) {
+    return $first;
   }
 
   return;
