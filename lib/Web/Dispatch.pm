@@ -34,41 +34,61 @@ sub call {
 sub _dispatch {
   my ($self, $env, @match) = @_;
   while (my $try = shift @match) {
+
+    return $try if ref($try) eq 'ARRAY';
     if (ref($try) eq 'HASH') {
       $env = { %$env, %$try };
       next;
-    } elsif (ref($try) eq 'ARRAY') {
-      return $try;
     }
+
     my @result = $self->_to_try($try, \@match)->($env, @match);
     next unless @result and defined($result[0]);
-    if (ref($result[0]) eq 'ARRAY') {
-      if (@{$result[0]} == 1 and ref($result[0][0]) eq 'CODE') {
-        return $result[0][0];
-      }
-      return $result[0];
-    } elsif (blessed($result[0]) && $result[0]->isa('Plack::Middleware')) {
-      die "Multiple results but first one is a middleware ($result[0])"
-        if @result > 1;
-      # middleware needs to uplevel exactly once to wrap the rest of the
-      # level it was created for - next elsif unwraps it
-      return { MAGIC_MIDDLEWARE_KEY, $result[0] };
-      my $mw = $result[0];
-    } elsif (
-      ref($result[0]) eq 'HASH'
-      and my $mw = $result[0]->{+MAGIC_MIDDLEWARE_KEY}
-    ) {
-      $mw->app(sub { $self->_dispatch($_[0], @match) });
-      return $mw->to_app->($env);
-    } elsif (blessed($result[0]) && !$result[0]->can('to_app')) {
-      return $result[0];
-    } else {
-      # make a copy so we don't screw with it assigning further up
-      my $env = $env;
-      unshift @match, sub { $self->_dispatch($env, @result) };
-    }
+
+    my $first = $result[0];
+
+    return $self->_unpack_array_match( $first )
+      if ref($first) eq 'ARRAY';
+
+    return $self->_prepare_middleware( $first, \@result )
+      if blessed($first) && $first->isa('Plack::Middleware');
+
+    return $self->_unwrap_middleware( $first, \@match, $env )
+      if ref($first) eq 'HASH' and $first->{+MAGIC_MIDDLEWARE_KEY};
+
+    return $first
+      if blessed($first) && !$first->can('to_app');
+
+    # make a copy so we don't screw with it assigning further up
+    my $env = $env;
+    unshift @match, sub { $self->_dispatch($env, @result) };
   }
+
   return;
+}
+
+sub _unpack_array_match {
+  my ( $self, $match ) = @_;
+  return $match->[0] if @{$match} == 1 and ref($match->[0]) eq 'CODE';
+  return $match;
+}
+
+sub _prepare_middleware {
+  my ( $self, $match, $results ) = @_;
+  die "Multiple results but first one is a middleware ($match)"
+    if @{$results} > 1;
+  # middleware needs to uplevel exactly once to wrap the rest of the
+  # level it was created for - next elsif unwraps it
+  return { MAGIC_MIDDLEWARE_KEY, $match };
+}
+
+sub _unwrap_middleware {
+  my ( $self, $first, $match, $env ) = @_;
+
+  my $mw = $first->{+MAGIC_MIDDLEWARE_KEY};
+
+  $mw->app(sub { $self->_dispatch($_[0], @{$match}) });
+
+  return $mw->to_app->($env);
 }
 
 sub _to_try {
