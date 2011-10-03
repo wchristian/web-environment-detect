@@ -45,8 +45,11 @@ sub _dispatch {
     next unless @result and defined($result[0]);
 
     my $first = $result[0];
-    my $dispatch = $self->_valid_dispatch( $first, \@result, \@match, $env );
-    return $dispatch if $dispatch;
+
+    if (my $res = $self->_have_result( $first, \@result, \@match, $env )) {
+
+      return $res;
+    }
 
     # make a copy so we don't screw with it assigning further up
     my $env = $env;
@@ -56,17 +59,17 @@ sub _dispatch {
   return;
 }
 
-sub _valid_dispatch {
+sub _have_result {
   my ( $self, $first, $result, $match, $env ) = @_;
 
   if ( ref($first) eq 'ARRAY' ) {
     return $self->_unpack_array_match( $first );
   }
   elsif ( blessed($first) && $first->isa('Plack::Middleware') ) {
-    return $self->_prepare_middleware( $first, $result );
+    return $self->_uplevel_middleware( $first, $result );
   }
   elsif ( ref($first) eq 'HASH' and $first->{+MAGIC_MIDDLEWARE_KEY} ) {
-    return $self->_unwrap_middleware( $first, $match, $env );
+    return $self->_redispatch_with_middleware( $first, $match, $env );
   }
   elsif ( blessed($first) && !$first->can('to_app') ) {
     return $first;
@@ -81,7 +84,7 @@ sub _unpack_array_match {
   return $match;
 }
 
-sub _prepare_middleware {
+sub _uplevel_middleware {
   my ( $self, $match, $results ) = @_;
   die "Multiple results but first one is a middleware ($match)"
     if @{$results} > 1;
@@ -90,7 +93,7 @@ sub _prepare_middleware {
   return { MAGIC_MIDDLEWARE_KEY, $match };
 }
 
-sub _unwrap_middleware {
+sub _redispatch_with_middleware {
   my ( $self, $first, $match, $env ) = @_;
 
   my $mw = $first->{+MAGIC_MIDDLEWARE_KEY};
