@@ -30,10 +30,7 @@ my $app = PostTest->new;
 
 sub run_request {
   my $request = shift;
-  my $response = test_psgi($app->to_psgi_app, sub {
-    shift->($request);
-  });
-  return $response;
+  return test_psgi $app->to_psgi_app, sub { shift->($request) };
 }
 
 my $get = run_request(GET 'http://localhost/');

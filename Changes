@@ -1,5 +1,6 @@
 Change log for Web::Simple
 
+  - Complete port from HTTP::Request::AsCGI to Plack::Test
   - Add experimental upload support
   - Update Plack usage to call ::Handler:: classes not ::Server::
   - Assume FastCGI mode if STDIN is a socket (works some places env vars fail)

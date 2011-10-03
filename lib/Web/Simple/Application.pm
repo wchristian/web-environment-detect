@@ -269,12 +269,7 @@ calls ->new, or as an object method ... in which case it doesn't.
 
 =head2 run
 
-Used for running your application under stand-alone CGI and FCGI modes. Also
-useful for testing:
-
-    my $app = MyWebSimpleApp::Web->new;
-    my $c = HTTP::Request::AsCGI->new(@args)->setup;
-    $app->run;
+Used for running your application under stand-alone CGI and FCGI modes.
 
 =head1 AUTHORS
 
