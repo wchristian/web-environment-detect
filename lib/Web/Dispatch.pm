@@ -107,16 +107,12 @@ sub _to_try {
   my ($self, $try, $more) = @_;
   if (ref($try) eq 'CODE') {
     if (defined(my $proto = prototype($try))) {
-      $self->_construct_node(
-        match => $self->_parser->parse($proto), run => $try
-      )->to_app;
+      $self->_construct_node( match=> $proto, run => $try )->to_app;
     } else {
       $try
     }
   } elsif (!ref($try) and ref($more->[0]) eq 'CODE') {
-    $self->_construct_node(
-      match => $self->_parser->parse($try), run => shift(@$more)
-    )->to_app;
+    $self->_construct_node( match => $try, run => shift(@$more) )->to_app;
   } elsif (blessed($try) && $try->can('to_app')) {
     $try->to_app;
   } else {
@@ -126,6 +122,7 @@ sub _to_try {
 
 sub _construct_node {
   my ($self, %args) = @_;
+  $args{match} = $self->_parser->parse( $args{match} );
   $self->node_class->new({ %{$self->node_args}, %args });
 }
 
