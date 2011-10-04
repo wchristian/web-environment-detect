@@ -7,6 +7,27 @@ use Web::Dispatch::Parser;
 
 my $dp = Web::Dispatch::Parser->new;
 
+TODO: {
+   local $TODO = 'according to the synopsis this should work';
+   my $all = eval {
+     $dp->parse('');
+   };
+   ok $all;
+   eval {
+     is_deeply(
+       [ $all->({ REQUEST_METHOD => 'GET' }) ],
+       [ {} ],
+       'GET matches'
+     );
+
+     is_deeply(
+       [ $all->({ REQUEST_METHOD => 'POST' }) ],
+       [ {} ],
+       'POST matches'
+     );
+   };
+};
+
 {
    my $get = $dp->parse('GET');
 
