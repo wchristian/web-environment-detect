@@ -33,7 +33,7 @@ sub call {
 
 sub _dispatch {
   my ($self, $env, @match) = @_;
-  while (my $try = shift @match) {
+  while (defined(my $try = shift @match)) {
 
     return $try if ref($try) eq 'ARRAY';
     if (ref($try) eq 'HASH') {
