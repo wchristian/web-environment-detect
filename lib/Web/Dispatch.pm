@@ -46,7 +46,7 @@ sub _dispatch {
 
     my $first = $result[0];
 
-    if (my $res = $self->_have_result( $first, \@result, \@match, $env )) {
+    if (my $res = $self->_have_result($first, \@result, \@match, $env)) {
 
       return $res;
     }
@@ -60,18 +60,18 @@ sub _dispatch {
 }
 
 sub _have_result {
-  my ( $self, $first, $result, $match, $env ) = @_;
+  my ($self, $first, $result, $match, $env) = @_;
 
-  if ( ref($first) eq 'ARRAY' ) {
-    return $self->_unpack_array_match( $first );
+  if (ref($first) eq 'ARRAY') {
+    return $self->_unpack_array_match($first);
   }
-  elsif ( blessed($first) && $first->isa('Plack::Middleware') ) {
-    return $self->_uplevel_middleware( $first, $result );
+  elsif (blessed($first) && $first->isa('Plack::Middleware')) {
+    return $self->_uplevel_middleware($first, $result);
   }
-  elsif ( ref($first) eq 'HASH' and $first->{+MAGIC_MIDDLEWARE_KEY} ) {
-    return $self->_redispatch_with_middleware( $first, $match, $env );
+  elsif (ref($first) eq 'HASH' and $first->{+MAGIC_MIDDLEWARE_KEY}) {
+    return $self->_redispatch_with_middleware($first, $match, $env);
   }
-  elsif ( blessed($first) && !$first->can('to_app') ) {
+  elsif (blessed($first) && !$first->can('to_app')) {
     return $first;
   }
 
@@ -79,13 +79,13 @@ sub _have_result {
 }
 
 sub _unpack_array_match {
-  my ( $self, $match ) = @_;
+  my ($self, $match) = @_;
   return $match->[0] if @{$match} == 1 and ref($match->[0]) eq 'CODE';
   return $match;
 }
 
 sub _uplevel_middleware {
-  my ( $self, $match, $results ) = @_;
+  my ($self, $match, $results) = @_;
   die "Multiple results but first one is a middleware ($match)"
     if @{$results} > 1;
   # middleware needs to uplevel exactly once to wrap the rest of the
@@ -94,7 +94,7 @@ sub _uplevel_middleware {
 }
 
 sub _redispatch_with_middleware {
-  my ( $self, $first, $match, $env ) = @_;
+  my ($self, $first, $match, $env) = @_;
 
   my $mw = $first->{+MAGIC_MIDDLEWARE_KEY};
 
