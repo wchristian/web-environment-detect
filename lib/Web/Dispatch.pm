@@ -105,6 +105,12 @@ sub _redispatch_with_middleware {
 
 sub _to_try {
   my ($self, $try, $more) = @_;
+
+  # sub (<spec>) {}      becomes a dispatcher
+  # sub {}               is a PSGI app and can be returned as is
+  # '<spec>' => sub {}   becomes a dispatcher
+  # $obj w/to_app method is a Plack::App-like thing - call it to get a PSGI app
+
   if (ref($try) eq 'CODE') {
     if (defined(my $proto = prototype($try))) {
       $self->_construct_node(match => $proto, run => $try)->to_app;
