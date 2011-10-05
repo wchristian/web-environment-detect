@@ -68,14 +68,9 @@ use Plack::Test;
 ok my $app = t::Web::Simple::SubDispatchArgs->new,
   'made app';
 
-sub run_request {
-  my $request = shift;
-  return test_psgi $app->to_psgi_app, sub { shift->($request) };
-}
+sub run_request { $app->run_test_request(@_); }
 
-use HTTP::Request::Common qw(GET POST);
-
-ok my $get_landing = run_request(GET 'http://localhost/' ),
+ok my $get_landing = run_request(GET => 'http://localhost/' ),
   'got landing';
 
 cmp_ok $get_landing->code, '==', 200, 
@@ -91,7 +86,7 @@ no strict 'refs';
     is ref($env), 'HASH', 'Got hashref';
 }
 
-ok my $get_users = run_request(GET 'http://localhost/user'),
+ok my $get_users = run_request(GET => 'http://localhost/user'),
   'got user';
 
 cmp_ok $get_users->code, '==', 200, 
@@ -104,7 +99,7 @@ cmp_ok $get_users->code, '==', 200,
     is ref($env), 'HASH', 'Got hashref';
 }
 
-ok my $get_user = run_request(GET 'http://localhost/user/42'),
+ok my $get_user = run_request(GET => 'http://localhost/user/42'),
   'got user';
 
 cmp_ok $get_user->code, '==', 200, 
@@ -117,7 +112,7 @@ cmp_ok $get_user->code, '==', 200,
     is ref($env), 'HASH', 'Got hashref';
 }
 
-ok my $post_user = run_request(POST 'http://localhost/user/42', [id => '99'] ),
+ok my $post_user = run_request(POST => 'http://localhost/user/42', [id => '99'] ),
   'post user';
 
 cmp_ok $post_user->code, '==', 200, 
