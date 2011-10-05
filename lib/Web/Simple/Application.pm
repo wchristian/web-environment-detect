@@ -78,16 +78,17 @@ sub run {
 
   unshift(@args, 'GET') if $args[0] =~ m{^/};
 
-  $self->_run_test_request(@args);
+  $self->_run_cli_test_request(@args);
 }
 
-sub _run_test_request {
+sub _test_request_spec_to_http_request {
   my ($self, $method, $path, @rest) = @_;
 
-  require HTTP::Request;
-  require Plack::Test;
+  # if it's a reference, assume a request object
+  return $method if ref($method);
 
   my $request = HTTP::Request->new($method => $path);
+
   if ($method eq 'POST' or $method eq 'PUT' and @rest) {
     my $content = do {
       require URI;
@@ -99,10 +100,29 @@ sub _run_test_request {
     $request->header('Content-Length' => length($content));
     $request->content($content);
   }
-  my $response;
+
+  return $request;
+}
+
+sub run_test_request {
+  my ($self, @req) = @_;
+
+  require HTTP::Request;
+  require Plack::Test;
+
+  my $request = $self->_test_request_spec_to_http_request(@req);
+
   Plack::Test::test_psgi(
-    $self->to_psgi_app, sub { $response = shift->($request) }
+    $self->to_psgi_app, sub { shift->($request) }
   );
+}
+
+sub _run_cli_test_request {
+  my ($self, @req) = @_;
+  my $response = $self->run_test_request(@req);
+
+  binmode(STDOUT); binmode(STDERR); # for win32
+
   print STDERR $response->status_line."\n";
   print STDERR $response->headers_as_string("\n")."\n";
   my $content = $response->content;
