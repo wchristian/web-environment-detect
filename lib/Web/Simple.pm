@@ -623,6 +623,8 @@ As of 0.005, you can instead write simply:
     )
   }
 
+=back
+
 =head2 Changes since Antiquated Perl
 
 =over 4
@@ -674,11 +676,11 @@ Gitweb is on http://git.shadowcat.co.uk/ and the clone URL is:
 
 =head1 AUTHOR
 
-Matt S. Trout <mst@shadowcat.co.uk>
+Matt S. Trout (mst) <mst@shadowcat.co.uk>
 
 =head1 CONTRIBUTORS
 
-None required yet. Maybe this module is perfect (hahahahaha ...).
+gregor herrmann (gregoa) <gregoa@debian.org>
 
 =head1 COPYRIGHT
 
