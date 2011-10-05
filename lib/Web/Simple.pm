@@ -83,7 +83,7 @@ C<import> based one:
 
 This sets up your package (in this case "NameOfApplication" is your package)
 so that it inherits from L<Web::Simple::Application> and imports L<strictures>,
-as well as installs a C<PSGI_ENV> constant for convenience, as well as some 
+as well as installs a C<PSGI_ENV> constant for convenience, as well as some
 other subroutines.
 
 Importing L<strictures> will automatically make your code use the C<strict> and
@@ -427,7 +427,7 @@ the 'coffee' parameter.
 
 Note, in the case where you combine arrayref, single parameter and named
 hashref style, the arrayref and single parameters will appear in C<@_> in the
-order you defined them in the protoype, but all hashrefs will merge into a 
+order you defined them in the protoype, but all hashrefs will merge into a
 single C<$params>, as in the example above.
 
 =head3 Upload matches (EXPERIMENTAL)
@@ -573,7 +573,7 @@ Thus if you receive a POST to '/some/url' and return a redispatch to
 request had been made to '/other/url' instead.
 
 Note, this is not the same as returning an HTTP 3xx redirect as a response;
-rather it is a much more efficient internal process.  
+rather it is a much more efficient internal process.
 
 =head1 CHANGES BETWEEN RELEASES
 
