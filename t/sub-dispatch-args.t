@@ -73,7 +73,7 @@ sub run_request { $app->run_test_request(@_); }
 ok my $get_landing = run_request(GET => 'http://localhost/' ),
   'got landing';
 
-cmp_ok $get_landing->code, '==', 200, 
+cmp_ok $get_landing->code, '==', 200,
   '200 on GET';
 
 no strict 'refs';
@@ -89,7 +89,7 @@ no strict 'refs';
 ok my $get_users = run_request(GET => 'http://localhost/user'),
   'got user';
 
-cmp_ok $get_users->code, '==', 200, 
+cmp_ok $get_users->code, '==', 200,
   '200 on GET';
 
 {
@@ -102,7 +102,7 @@ cmp_ok $get_users->code, '==', 200,
 ok my $get_user = run_request(GET => 'http://localhost/user/42'),
   'got user';
 
-cmp_ok $get_user->code, '==', 200, 
+cmp_ok $get_user->code, '==', 200,
   '200 on GET';
 
 {
@@ -115,7 +115,7 @@ cmp_ok $get_user->code, '==', 200,
 ok my $post_user = run_request(POST => 'http://localhost/user/42', [id => '99'] ),
   'post user';
 
-cmp_ok $post_user->code, '==', 200, 
+cmp_ok $post_user->code, '==', 200,
   '200 on POST';
 
 {
@@ -126,4 +126,3 @@ cmp_ok $post_user->code, '==', 200,
     is $params->{id}, 99, 'got expected value for id';
     is ref($env), 'HASH', 'Got hashref';
 }
-
