@@ -680,7 +680,27 @@ Matt S. Trout (mst) <mst@shadowcat.co.uk>
 
 =head1 CONTRIBUTORS
 
+Devin Austin (dhoss) <dhoss@cpan.org>
+
+Arthur Axel 'fREW' Schmidt <frioux@gmail.com>
+
 gregor herrmann (gregoa) <gregoa@debian.org>
+
+John Napiorkowski (jnap) <jjn1056@yahoo.com>
+
+Josh McMichael <jmcmicha@linus222.gsc.wustl.edu>
+
+Justin Hunter <justin.d.hunter@gmail.com>
+
+Kjetil Kjernsmo <kjetil@kjernsmo.net>
+
+markie <markie@nulletch64.dreamhost.com>
+
+Christian Walde (Mithaldu) <walde.christian@googlemail.com>
+
+nperez <nperez@cpan.org>
+
+Robin Edwards <robin.ge@gmail.com>
 
 =head1 COPYRIGHT
 
