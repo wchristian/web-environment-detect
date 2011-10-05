@@ -39,18 +39,15 @@ Web::Simple - A quick and easy way to build simple web applications
 
   #!/usr/bin/env perl
 
-  use Web::Simple 'HelloWorld';
+  package HelloWorld;
+  use Web::Simple
 
-  {
-    package HelloWorld;
-
-    sub dispatch_request {
-      sub (GET) {
-        [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
-      },
-      sub () {
-        [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
-      }
+  sub dispatch_request {
+    sub (GET) {
+      [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
+    },
+    sub () {
+      [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
     }
   }
 
@@ -60,9 +57,13 @@ If you save this file into your cgi-bin as C<hello-world.cgi> and then visit:
 
   http://my.server.name/cgi-bin/hello-world.cgi/
 
-you'll get the "Hello world!" string output to your browser. For more complex
-examples and non-CGI deployment, see below. To get help with L<Web::Simple>,
-please connect to the irc.perl.org IRC network and join #web-simple.
+you'll get the "Hello world!" string output to your browser. At the same time
+this file will also act as a class module, so you can save it as HelloWorld.pm
+and use it as-is in test scripts or other deployment mechanisms.
+
+For more complex examples and non-CGI deployment, see
+L<Web::Simple::Deployment>. To get help with L<Web::Simple>, please connect to
+the irc.perl.org IRC network and join #web-simple.
 
 =head1 DESCRIPTION
 
