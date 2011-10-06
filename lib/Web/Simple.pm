@@ -61,6 +61,10 @@ you'll get the "Hello world!" string output to your browser. At the same time
 this file will also act as a class module, so you can save it as HelloWorld.pm
 and use it as-is in test scripts or other deployment mechanisms.
 
+Note that you should retain the ->run_if_script even if your app is a
+module, since this additionally makes it valid as a .psgi file, which can
+be extremely useful during development.
+
 For more complex examples and non-CGI deployment, see
 L<Web::Simple::Deployment>. To get help with L<Web::Simple>, please connect to
 the irc.perl.org IRC network and join #web-simple.

@@ -1,5 +1,6 @@
 Change log for Web::Simple
 
+  - Provide $app->run_test_request for use in test scripts
   - Preserve original env in Web::Dispatch so ParamParser can cache in there
     (stops HTTP::Body object getting destroyed early thereby losing uploads)
 

@@ -291,6 +291,25 @@ calls ->new, or as an object method ... in which case it doesn't.
 
 Used for running your application under stand-alone CGI and FCGI modes.
 
+I should document this more extensively but run_if_script will call it when
+you need it, so don't worry about it too much.
+
+=head2 run_test_request
+
+  my $res = $app->run_test_request(GET => '/');
+
+  my $res = $app->run_test_request(POST => '/' => %form);
+
+  my $res = $app->run_test_request($http_request);
+
+Accepts either an L<HTTP::Request> object or ($method, $path) and runs that
+request against the application, returning an L<HTTP::Response> object.
+
+If the HTTP method is POST or PUT, then a series of pairs can be passed after
+this to create a form style message body. If you need to test an upload, then
+create an L<HTTP::Request> object by hand or use the C<POST> subroutine
+provided by L<HTTP::Request::Common>.
+
 =head1 AUTHORS
 
 See L<Web::Simple> for authors.
