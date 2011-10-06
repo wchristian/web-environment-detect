@@ -34,6 +34,7 @@ use Plack::Test;
     sub show_landing {
         my ($self, @args) = @_;
         local $self->{_dispatcher};
+        local $args[-1]->{'Web::Dispatch.original_env'};
         return [
             200, ['Content-Type' => 'application/perl' ],
             [::Dumper \@args],
@@ -42,6 +43,7 @@ use Plack::Test;
     sub show_users {
         my ($self, @args) = @_;
         local $self->{_dispatcher};
+        local $args[-1]->{'Web::Dispatch.original_env'};
         return [
             200, ['Content-Type' => 'application/perl' ],
             [::Dumper \@args],
@@ -50,6 +52,7 @@ use Plack::Test;
     sub show_user {
         my ($self, @args) = @_;
         local $self->{_dispatcher};
+        local $args[-1]->{'Web::Dispatch.original_env'};
         return [
             200, ['Content-Type' => 'application/perl' ],
             [::Dumper \@args],
@@ -58,6 +61,7 @@ use Plack::Test;
     sub process_post {
         my ($self, @args) = @_;
         local $self->{_dispatcher};
+        local $args[-1]->{'Web::Dispatch.original_env'};
         return [
             200, ['Content-Type' => 'application/perl' ],
             [::Dumper \@args],

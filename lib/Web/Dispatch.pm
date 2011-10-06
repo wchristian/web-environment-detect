@@ -37,7 +37,7 @@ sub _dispatch {
 
     return $try if ref($try) eq 'ARRAY';
     if (ref($try) eq 'HASH') {
-      $env = { %$env, %$try };
+      $env = { 'Web::Dispatch.original_env' => $env, %$env, %$try };
       next;
     }
 

@@ -89,7 +89,7 @@ sub _test_request_spec_to_http_request {
 
   my $request = HTTP::Request->new($method => $path);
 
-  if ($method eq 'POST' or $method eq 'PUT' and @rest) {
+  if (($method eq 'POST' or $method eq 'PUT') and @rest) {
     my $content = do {
       require URI;
       my $url = URI->new('http:');
