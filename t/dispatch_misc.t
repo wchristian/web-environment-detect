@@ -89,10 +89,10 @@ sub array_with_sub {
         }
     );
 
-    my $get = run_request( GET => 'http://localhost/' );
+    eval { run_request( GET => 'http://localhost/' ) };
 
-    cmp_ok $get->code, '==', 999,
-      "if a route returns an arrayref with a single sub in it, then WD redispatches to that sub";
+    like $@, qr/Can't call method "request" on an undefined value .*MockHTTP/,
+"if a route returns an arrayref with a single sub in it, then that sub is returned as a response by WD, causing HTTP::Message::PSGI to choke";
 }
 
 sub array_with_no_sub {

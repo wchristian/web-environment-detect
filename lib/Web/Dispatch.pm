@@ -28,7 +28,9 @@ sub _build__parser {
 
 sub call {
   my ($self, $env) = @_;
-  $self->_dispatch($env, $self->app);
+  my $res = $self->_dispatch($env, $self->app);
+  return $res->[0] if ref($res) eq 'ARRAY' and @{$res} == 1 and ref($res->[0]) eq 'CODE';
+  return $res;
 }
 
 sub _dispatch {
@@ -63,7 +65,7 @@ sub _have_result {
   my ($self, $first, $result, $match, $env) = @_;
 
   if (ref($first) eq 'ARRAY') {
-    return $self->_unpack_array_match($first);
+    return $first;
   }
   elsif (blessed($first) && $first->isa('Plack::Middleware')) {
     return $self->_uplevel_middleware($first, $result);
@@ -76,12 +78,6 @@ sub _have_result {
   }
 
   return;
-}
-
-sub _unpack_array_match {
-  my ($self, $match) = @_;
-  return $match->[0] if @{$match} == 1 and ref($match->[0]) eq 'CODE';
-  return $match;
 }
 
 sub _uplevel_middleware {
