@@ -14,8 +14,6 @@ my $app = StreamTest->new;
 ok run_request( $app, GET 'http://localhost/' )->is_success;
 is run_request( $app, GET 'http://localhost/' )->content, "foo";
 
-done_testing;
-
 sub run_request {
     my ( $app, $request ) = @_;
     my $c = HTTP::Request::AsCGI->new( $request )->setup;
