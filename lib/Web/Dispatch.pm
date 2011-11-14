@@ -73,10 +73,13 @@ sub _have_result {
   elsif (ref($first) eq 'HASH' and $first->{+MAGIC_MIDDLEWARE_KEY}) {
     return $self->_redispatch_with_middleware($first, $match, $env);
   }
-  elsif (blessed($first) && !$first->can('to_app')) {
+  elsif (
+    blessed($first) &&
+    not($first->can('to_app')) &&
+    not($first->isa('Web::Dispatch::Matcher'))
+  ) {
     return $first;
   }
-
   return;
 }
 
@@ -105,7 +108,9 @@ sub _to_try {
   # sub (<spec>) {}      becomes a dispatcher
   # sub {}               is a PSGI app and can be returned as is
   # '<spec>' => sub {}   becomes a dispatcher
+  # $obj isa WD:Predicates::Proxy => sub { ... } -  become a dispatcher
   # $obj w/to_app method is a Plack::App-like thing - call it to get a PSGI app
+  #
 
   if (ref($try) eq 'CODE') {
     if (defined(my $proto = prototype($try))) {
@@ -115,6 +120,15 @@ sub _to_try {
     }
   } elsif (!ref($try) and ref($more->[0]) eq 'CODE') {
     $self->_construct_node(match => $try, run => shift(@$more))->to_app;
+  } elsif (
+    (blessed($try) && $try->isa('Web::Dispatch::Matcher'))
+    and (ref($more->[0]) eq 'CODE')
+  ) {
+    $self->node_class->new({
+      %{$self->node_args},
+      match => $try,
+      run => shift(@$more)
+    })->to_app;
   } elsif (blessed($try) && $try->can('to_app')) {
     $try->to_app;
   } else {
