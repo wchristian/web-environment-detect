@@ -108,7 +108,7 @@ sub _to_try {
   # sub (<spec>) {}      becomes a dispatcher
   # sub {}               is a PSGI app and can be returned as is
   # '<spec>' => sub {}   becomes a dispatcher
-  # $obj isa WD:Predicates::Proxy => sub { ... } -  become a dispatcher
+  # $obj isa WD:Predicates::Matcher => sub { ... } -  become a dispatcher
   # $obj w/to_app method is a Plack::App-like thing - call it to get a PSGI app
   #
 

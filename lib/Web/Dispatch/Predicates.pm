@@ -8,11 +8,11 @@ our @EXPORT = qw(
   match_extension match_query match_body match_uploads
 );
 
-sub _generate_proxy { bless shift, 'Web::Dispatch::Matcher' }
+sub _matcher { bless shift, 'Web::Dispatch::Matcher' }
 
 sub match_and {
   my @match = @_;
-  _generate_proxy(sub {
+  _matcher(sub {
     my ($env) = @_;
     my $my_env = { 'Web::Dispatch.original_env' => $env, %$env };
     my $new_env;
@@ -33,7 +33,7 @@ sub match_and {
 
 sub match_or {
   my @match = @_;
-  _generate_proxy(sub {
+  _matcher(sub {
     foreach my $try (@match) {
       if (my @ret = $try->(@_)) {
         return @ret;
@@ -45,7 +45,7 @@ sub match_or {
 
 sub match_not {
   my ($match) = @_;
-  _generate_proxy(sub {
+  _matcher(sub {
     if (my @discard = $match->($_[0])) {
       ();
     } else {
@@ -56,7 +56,7 @@ sub match_not {
 
 sub match_method {
   my ($method) = @_;
-  _generate_proxy(sub {
+  _matcher(sub {
     my ($env) = @_;
     $env->{REQUEST_METHOD} eq $method ? {} : ()
   })
@@ -64,7 +64,7 @@ sub match_method {
 
 sub match_path {
   my ($re) = @_;
-  _generate_proxy(sub {
+  _matcher(sub {
     my ($env) = @_;
     if (my @cap = ($env->{PATH_INFO} =~ /$re/)) {
       $cap[0] = {}; return @cap;
@@ -75,7 +75,7 @@ sub match_path {
 
 sub match_path_strip {
   my ($re) = @_;
-  _generate_proxy(sub {
+  _matcher(sub {
     my ($env) = @_;
     if (my @cap = ($env->{PATH_INFO} =~ /$re/)) {
       $cap[0] = {
@@ -94,7 +94,7 @@ sub match_extension {
   my $re = $wild
              ? qr/\.(\w+)$/
              : qr/\.(\Q${extension}\E)$/;
-  _generate_proxy(sub {
+  _matcher(sub {
     if ($_[0]->{PATH_INFO} =~ $re) {
       ($wild ? ({}, $1) : {});
     } else {
@@ -104,15 +104,15 @@ sub match_extension {
 }
 
 sub match_query {
-  _generate_proxy(_param_matcher(query => $_[0]));
+  _matcher(_param_matcher(query => $_[0]));
 }
 
 sub match_body {
-  _generate_proxy(_param_matcher(body => $_[0]));
+  _matcher(_param_matcher(body => $_[0]));
 }
 
 sub match_uploads {
-  _generate_proxy(_param_matcher(uploads => $_[0]));
+  _matcher(_param_matcher(uploads => $_[0]));
 }
 
 sub _param_matcher {
