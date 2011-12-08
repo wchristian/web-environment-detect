@@ -308,6 +308,29 @@ my $dp = Web::Dispatch::Parser->new;
 }
 
 {
+  my $match = '/foo...';
+  my $sub = $dp->parse($match);
+
+  is_deeply(
+    [ $sub->({ PATH_INFO => '/foo/bar' }) ],
+    [ { PATH_INFO => '/bar', SCRIPT_NAME => '/foo' } ],
+    "$match matches /foo/bar and strips to /bar"
+  );
+
+  is_deeply(
+    [ $sub->({ PATH_INFO => '/foo/' }) ],
+    [ { PATH_INFO => '/', SCRIPT_NAME => '/foo' } ],
+    "$match matches /foo/ and strips to /"
+  );
+
+  is_deeply(
+    [ $sub->({ PATH_INFO => '/foo' }) ],
+    [ { PATH_INFO => '', SCRIPT_NAME => '/foo' } ],
+    "$match matches /foo and strips to empty path"
+  );
+}
+
+{
   my @dot_pairs = (
     [ '/one/*' => 'two' ],
     [ '/one/*.*' => 'two.three' ],

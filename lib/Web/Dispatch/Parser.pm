@@ -138,6 +138,11 @@ sub _url_path_match {
         };
       push @path, $self->_url_path_segment_match($_)
         or $self->_blam("Couldn't parse path match segment");
+      /\G\.\.\./gc
+        and do {
+          $end = '(.*)';
+          last PATH;
+        };
       /\G\.\*/gc
         and do {
           $keep_dot = 1;
