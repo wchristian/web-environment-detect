@@ -706,7 +706,7 @@ John Napiorkowski (jnap) <jjn1056@yahoo.com>
 
 Josh McMichael <jmcmicha@linus222.gsc.wustl.edu>
 
-Justin Hunter <justin.d.hunter@gmail.com>
+Justin Hunter (arcanez) <justin.d.hunter@gmail.com>
 
 Kjetil Kjernsmo <kjetil@kjernsmo.net>
 
@@ -720,7 +720,7 @@ Robin Edwards <robin.ge@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
+Copyright (c) 2011 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
 as listed above.
 
 =head1 LICENSE
