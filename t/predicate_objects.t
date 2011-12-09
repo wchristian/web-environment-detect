@@ -14,18 +14,20 @@ use Plack::Test;
 
     sub dispatch_request {
         my $self = shift;
-        match_path(qr/(?^:^(\/)$)/), sub {
+        ## sub(/) {
+        match_path(qr/(?-xism:^(\/)$)/), sub {
             $self->show_landing(@_);
         },
-        match_path_strip(qr/(?^:^()(\/.*)$)/) => sub {
+        ## sub(/...) {
+        match_path_strip(qr/(?-xism:^()(\/.*)$)/) => sub {
             match_and
             (
                 match_method('GET'),
-                match_path(qr/(?^:^(\/user(?:\.\w+)?)$)/)
+                match_path(qr/(?-xism:^(\/user(?:\.\w+)?)$)/)
             )  => sub {
                 $self->show_users(@_);
             },
-            match_path(qr/(?^:^(\/user\/([^\/]+?)(?:\.\w+)?)$)/), sub {
+            match_path(qr/(?-xism:^(\/user\/([^\/]+?)(?:\.\w+)?)$)/), sub {
                 match_method('GET') => sub {
                     $self->show_user(@_);
                 },
