@@ -322,9 +322,9 @@ also match more than one part:
 and so on. To match an arbitrary number of parts, use -
 
   sub (/page/**) {
+    my ($self, $match) = @_;
 
-This will result in an element per /-separated part so matched. Note that
-you can do
+This will result in a single element for the entire match. Note that you can do
 
   sub (/page/**/edit) {
 
