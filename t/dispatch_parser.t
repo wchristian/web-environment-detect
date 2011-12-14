@@ -276,6 +276,16 @@ my $dp = Web::Dispatch::Parser->new;
 }
 
 {
+  my $sub = $dp->parse('/foo/**/belief');
+  my $match = 'barred/beyond';
+  is_deeply(
+    [ $sub->({ PATH_INFO => "/foo/${match}/belief" }) ],
+    [ {}, $match ],
+    "/foo/**/belief matches /foo/${match}/belief"
+  );
+}
+
+{
   my @dot_pairs = (
     [ '/one/*' => 'two' ],
     [ '/one/*.*' => 'two.three' ],
