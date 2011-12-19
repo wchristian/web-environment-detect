@@ -329,6 +329,12 @@ my $dp = Web::Dispatch::Parser->new;
   my $sub = $dp->parse($match);
 
   is_deeply(
+    [ $sub->({ PATH_INFO => '/foobar' }) ],
+    [],
+    "$match does not match /foobar"
+  );
+
+  is_deeply(
     [ $sub->({ PATH_INFO => '/foo/bar' }) ],
     [ { PATH_INFO => '/bar', SCRIPT_NAME => '/foo' } ],
     "$match matches /foo/bar and strips to /bar"

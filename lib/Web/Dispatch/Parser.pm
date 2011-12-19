@@ -145,7 +145,7 @@ sub _url_path_match {
         or $self->_blam("Couldn't parse path match segment");
       /\G\.\.\./gc
         and do {
-          $end = '(.*)';
+          $end = '(|/.*)';
           last PATH;
         };
       /\G\.\*/gc
