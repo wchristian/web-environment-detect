@@ -1,5 +1,3 @@
-Change log for Web::Simple
-
   - Add Web::Dispatch::HTTPMethods
   - Fix [ sub {} ] for async code
   - Support match_foo(...) => sub {} as a dispatcher return
