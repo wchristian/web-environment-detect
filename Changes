@@ -1,3 +1,4 @@
+0.011 - 2011-12-23
   - Add Web::Dispatch::HTTPMethods
   - Fix [ sub {} ] for async code
   - Support match_foo(...) => sub {} as a dispatcher return
