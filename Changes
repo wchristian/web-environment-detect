@@ -1,3 +1,5 @@
+  - Allow dots in path matches, so you can have sub (/foo.html)
+
 0.011 - 2011-12-23
   - Add Web::Dispatch::HTTPMethods
   - Fix [ sub {} ] for async code
