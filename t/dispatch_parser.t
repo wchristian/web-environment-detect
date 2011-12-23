@@ -254,6 +254,28 @@ my $dp = Web::Dispatch::Parser->new;
 }
 
 {
+  my $ext = $dp->parse('/foo.bar');
+
+  is_deeply(
+    [ $ext->({ PATH_INFO => '/foo.bar' }) ],
+    [ {} ],
+    '/foo.bar matches /foo.bar'
+  );
+
+  is_deeply(
+    [ $ext->({ PATH_INFO => '/foo.bar.ext' }) ],
+    [ {} ],
+    '/foo.bar matches /foo.bar.ext'
+  );
+
+  is_deeply(
+    [ $ext->({ PATH_INFO => '/foo.notbar' }) ],
+    [],
+    '/foo.bar does not match /foo.notbar'
+  );
+}
+
+{
   my $sub = $dp->parse('/foo/*/...');
 
   is_deeply(
