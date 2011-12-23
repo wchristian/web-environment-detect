@@ -718,6 +718,8 @@ nperez <nperez@cpan.org>
 
 Robin Edwards <robin.ge@gmail.com>
 
+Andrew Rodland (hobbs) <andrew@cleverdomain.org>
+
 =head1 COPYRIGHT
 
 Copyright (c) 2011 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
