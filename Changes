@@ -1,5 +1,9 @@
 Change log for Web::Simple
 
+  - Add Web::Dispatch::HTTPMethods
+  - Fix [ sub {} ] for async code
+  - Support match_foo(...) => sub {} as a dispatcher return
+
 0.010 - 2011-10-06
   - Provide $app->run_test_request for use in test scripts
   - Preserve original env in Web::Dispatch so ParamParser can cache in there
