@@ -40,7 +40,7 @@ Web::Simple - A quick and easy way to build simple web applications
   #!/usr/bin/env perl
 
   package HelloWorld;
-  use Web::Simple
+  use Web::Simple;
 
   sub dispatch_request {
     sub (GET) {
