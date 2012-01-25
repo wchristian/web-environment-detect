@@ -165,7 +165,17 @@ sub _url_path_segment_match {
     /\G(?:(?=[+|\)])|$)/gc and
       return '';
     # word chars only -> exact path part match
-    /\G([\w\-.]+)/gc and
+    /
+        \G(
+            (?:             # start matching at a space followed by:
+                    [\w\-]  # word chars or dashes
+                |           # OR
+                    \.      # a period
+                    (?!\.)  # not followed by another period
+            )
+            +               # then grab as far as possible
+        )
+    /gcx and
       return "\Q$1";
     # ** -> capture unlimited path parts
     /\G\*\*/gc and
