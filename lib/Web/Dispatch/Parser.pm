@@ -35,7 +35,7 @@ sub parse {
 
 sub _parse_spec {
   my ($self, $spec, $nested) = @_;
-  return sub { {} } unless length($spec);
+  return match_true() unless length($spec);
   for ($_[1]) {
     my @match;
     PARSE: { do {
