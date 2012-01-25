@@ -308,6 +308,23 @@ my $dp = Web::Dispatch::Parser->new;
 }
 
 {
+  my $match = '~';
+  my $sub = $dp->parse($match);
+
+  is_deeply(
+    [ $sub->({ PATH_INFO => '/foo' }) ],
+    [],
+    "$match does not match /foo"
+  );
+
+  is_deeply(
+    [ $sub->({ PATH_INFO => '' }) ],
+    [ {} ],
+    "$match matches empty path with empty env"
+  );
+}
+
+{
   my $match = '/foo...';
   my $sub = $dp->parse($match);
 

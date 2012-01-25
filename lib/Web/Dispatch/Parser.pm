@@ -84,6 +84,11 @@ sub _parse_spec_section {
   my ($self) = @_;
   for ($_[1]) {
 
+    # ~
+
+    /\G~/gc and
+      return match_path('^$');
+
     # GET POST PUT HEAD ...
 
     /\G([A-Z]+)/gc and
