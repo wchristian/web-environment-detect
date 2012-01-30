@@ -1,3 +1,4 @@
+0.012 - 2012-01-30
   - Added match predicates match_true and match_false
   - Added '~' to match an empty path
   - Sub-dispatch via '...' is now permissible without a trailing slash
