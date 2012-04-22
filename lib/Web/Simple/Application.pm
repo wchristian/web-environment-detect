@@ -98,11 +98,11 @@ sub _test_request_spec_to_http_request {
     $request->headers->push_header($header, $value);
   }
 
-  if (($method eq 'POST' or $method eq 'PUT') and @rest) {
+  if (($method eq 'POST' or $method eq 'PUT') and @params) {
     my $content = do {
       require URI;
       my $url = URI->new('http:');
-      $url->query_form(@rest);
+      $url->query_form(@params);
       $url->query;
     };
     $request->header('Content-Type' => 'application/x-www-form-urlencoded');
