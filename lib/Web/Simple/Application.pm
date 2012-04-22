@@ -89,6 +89,15 @@ sub _test_request_spec_to_http_request {
 
   my $request = HTTP::Request->new($method => $path);
 
+  my @params;
+
+  while (my ($header, $value) = splice(@rest, 0, 2)) {
+    unless ($header =~ s/:$//) {
+      push @params, $header, $value;
+    }
+    $request->headers->push_header($header, $value);
+  }
+
   if (($method eq 'POST' or $method eq 'PUT') and @rest) {
     my $content = do {
       require URI;
