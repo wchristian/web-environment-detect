@@ -6,7 +6,7 @@ use warnings::illegalproto ();
 use Moo ();
 use Web::Dispatch::Wrapper ();
 
-our $VERSION = '0.013';
+our $VERSION = '0.014';
 
 sub import {
   my ($class, $app_package) = @_;
