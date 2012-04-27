@@ -1,3 +1,4 @@
+  - Add named path matching
   - Allow headers on CLI calls
 
 0.013 - 2012-04-03
