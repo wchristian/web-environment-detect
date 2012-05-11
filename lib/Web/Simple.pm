@@ -30,7 +30,7 @@ sub _export_into {
   $INC{"${name}.pm"} = 'Set by "use Web::Simple;" invocation';
 }
 
-"Happy 62nd, wherever you are";
+1;
 
 =head1 NAME
 
