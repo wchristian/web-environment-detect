@@ -94,13 +94,13 @@ sub run {
   } elsif ($ENV{GATEWAY_INTERFACE}) {
     return $self->_run_cgi;
   }
-  unless (@ARGV && $ARGV[0] =~ m{^[A-Z/]}) {
+  unless (@ARGV && $ARGV[0] =~ m{(^[A-Z/])|\@}) {
     return $self->_run_cli(@ARGV);
   }
 
   my @args = @ARGV;
 
-  unshift(@args, 'GET') if $args[0] =~ m{^/} or $args[0] =~ m{\@};
+  unshift(@args, 'GET') if $args[0] !~ /^[A-Z]/;
 
   $self->_run_cli_test_request(@args);
 }
@@ -116,8 +116,6 @@ sub _test_request_spec_to_http_request {
     require MIME::Base64;
     unshift @rest, 'Authorization:', 'Basic '.MIME::Base64::encode($basic);
   }
-
-  require HTTP::Request;
 
   my $request = HTTP::Request->new($method => $path);
 
@@ -152,6 +150,8 @@ sub _test_request_spec_to_http_request {
 
 sub run_test_request {
   my ($self, @req) = @_;
+
+  require HTTP::Request;
 
   require Plack::Test;
 
