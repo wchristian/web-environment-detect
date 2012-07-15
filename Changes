@@ -1,3 +1,4 @@
+0.018 - 2012-07-15
   - Allow dots in parameter names
   - Support for basic authentication in test requests
 
