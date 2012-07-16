@@ -525,11 +525,7 @@ hashref style, the arrayref and single parameters will appear in C<@_> in the
 order you defined them in the protoype, but all hashrefs will merge into a
 single C<$params>, as in the example above.
 
-=head3 Upload matches (EXPERIMENTAL)
-
-Note: This feature is experimental. This means that it may not remain
-100% in its current form. If we change it, notes on updating your code
-will be added to the L</CHANGES BETWEEN RELEASES> section below.
+=head3 Upload matches
 
   sub (*foo=) { # param specifier can be anything valid for query or body
 
