@@ -607,6 +607,45 @@ from subroutine prototypes, so this is equivalent to
 
   sub (GET+/user/*) {
 
+=head3 Accessing parameters via C<%_>
+
+If your dispatch specification causes your dispatch subroutine to receive
+a hash reference as its first argument, the contained named parameters
+will be accessible via C<%_>.
+
+This can be used to access your path matches, if they're named:
+
+  sub (GET + /foo/:path_part) {
+    [ 200,
+      ['Content-type' => 'text/plain'],
+      ["We are in $_{path_part}"],
+    ];
+  }
+
+Or, if your first argument would be a hash reference containing named
+query parameters:
+
+  sub (GET + /foo + ?:some_param=) {
+    [ 200,
+      ['Content-type' => 'text/plain'],
+      ["We received $_{some_param} as parameter"],
+    ];
+  }
+
+Of course this also works when all you are doing is slurping the whole set
+of parameters by their name:
+
+  sub (GET + /foo + ?*) {
+    [ 200,
+      ['Content-type' => 'text/plain'],
+      [exists($_{foo}) ? "Received a foo: $_{foo}" : "No foo!"],
+    ],
+  }
+
+Note that only the first hash reference will be avaialble via C<%_>. If
+you receive additional hash references, you will need to access them as
+usual.
+
 =head3 Accessing the PSGI env hash
 
 In some cases you may wish to get the raw PSGI env hash - to do this,
