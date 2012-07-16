@@ -796,6 +796,8 @@ Robin Edwards <robin.ge@gmail.com>
 
 Andrew Rodland (hobbs) <andrew@cleverdomain.org>
 
+Robert Sedlacek (phaylon) <r.sedlacek@shadowcat.co.uk>
+
 =head1 COPYRIGHT
 
 Copyright (c) 2011 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
