@@ -461,8 +461,7 @@ Query and body parameters can be match via
 
 The body spec will match if the request content is either
 application/x-www-form-urlencoded or multipart/form-data - the latter
-of which is required for uploads, which are now handled experimentally
-- see below.
+of which is required for uploads - see below.
 
 The param spec is elements of one of the following forms -
 
