@@ -1,3 +1,5 @@
+  - re-dist for botched release
+
 0.019 - 2012-07-30
   - Add %_ alias if first argument is a hashref
   - Un-mark upload matches as experimental since they work
