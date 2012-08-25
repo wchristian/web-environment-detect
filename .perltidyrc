@@ -1,0 +1,9 @@
+--maximum-line-length=80
+--backup-and-modify-in-place
+--paren-tightness=2
+--output-line-ending=unix
+--cuddled-else
+--indent-columns=2
+--no-blanks-before-comments
+--warning-output
+--opening-brace-always-on-right

@@ -1,0 +1,77 @@
+{
+   "abstract" : "recognize the calling web environment from the process environment",
+   "author" : [
+      "Christian Walde <walde.christian@googlemail.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.300020, CPAN::Meta::Converter version 2.120921",
+   "license" : [
+      "unrestricted"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Web-Environment-Detect",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "examples",
+         "corpus"
+      ],
+      "package" : [
+         "DB"
+      ]
+   },
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Exporter" : "0",
+            "Module::Runtime" : "0",
+            "base" : "0",
+            "perl" : "5.008",
+            "strictures" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "File::Find" : "0",
+            "File::Temp" : "0",
+            "Moo" : "0",
+            "Test::Fatal" : "0",
+            "Test::InDistDir" : "0",
+            "Test::More" : "0",
+            "Web::Dispatch::ToApp" : "0",
+            "strict" : "0",
+            "warnings" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "Web::Environment::Detect" : {
+         "file" : "lib/Web/Environment/Detect.pm",
+         "version" : "0.000001"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "mailto" : "bug-web-environment-detect at rt.cpan.org",
+         "web" : "http://rt.cpan.org/Public/Dist/Display.html?Name=Web-Environment-Detect"
+      },
+      "homepage" : "https://github.com/wchristian/web-environment-detect",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/wchristian/web-environment-detect.git",
+         "web" : "https://github.com/wchristian/web-environment-detect"
+      }
+   },
+   "version" : "0.000001"
+}
+
