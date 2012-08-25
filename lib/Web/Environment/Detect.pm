@@ -6,9 +6,11 @@ package Web::Environment::Detect;
 
 # ABSTRACT: recognize the calling web environment from the process environment
 
+use Module::Runtime 'require_module';
+
 use base 'Exporter';
 
-our @EXPORT_OK = qw(detect);
+our @EXPORT_OK = qw(run detect);
 
 sub detect {
   if (caller(2)) {
@@ -28,6 +30,15 @@ sub detect {
   }
 
   die "No environment detected";
+}
+
+sub run {
+  my ($self)   = @_;
+  my $environment = detect();
+  my $handler  = "Plack::Handler::$environment";
+  require_module($handler);
+  my $res = $handler->new->run($self->to_app);
+  return $res;
 }
 
 1;
